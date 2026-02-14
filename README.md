@@ -1,202 +1,240 @@
-# Web Prototype - Node.js Development Environment
+# 📻 Radio Calico
 
-A complete local development setup with **Node.js**, **Express**, and **SQLite** for building and testing web applications.
+A retro-futuristic web-based streaming radio station with HLS lossless audio streaming and an integrated song rating system.
 
-## 🚀 What's Included
+## ✨ Features
 
-- **Express Web Server** - Fast, minimalist Node.js web framework
-- **SQLite Database** - Lightweight, file-based SQL database (perfect for prototyping!)
-- **RESTful API** - Complete CRUD operations (Create, Read, Update, Delete)
-- **Frontend Interface** - Beautiful, responsive UI with HTML/CSS/JavaScript
-- **Sample Application** - Working user management system to learn from
+- 🎵 **HLS Streaming** - High-quality adaptive bitrate audio streaming via CloudFront
+- 📊 **Real-time Metadata** - Live display of current song, artist, and album information
+- 👍👎 **Song Rating System** - Vote on tracks with thumbs up/down, see community ratings
+- 📈 **Audio Visualizer** - Real-time frequency spectrum visualizer using Web Audio API
+- 🕰️ **Song History** - Recently played tracks with timestamps
+- 🎨 **Retro UI** - Amber/brass themed CRT-style interface with scanlines and glow effects
+- 💾 **Persistent Ratings** - SQLite database stores all song ratings and metadata
 
-## 📋 Quick Start
+## 🛠️ Tech Stack
 
-### 1. Install Node.js
-If you don't have it: https://nodejs.org/ (download LTS version)
+**Backend:**
+- Node.js with Express.js
+- SQLite3 database
+- RESTful API architecture
 
-### 2. Set Up Your Project
+**Frontend:**
+- Vanilla JavaScript (no framework dependencies)
+- HLS.js for adaptive streaming
+- Web Audio API for visualization
+- CSS3 animations and effects
 
+**Streaming:**
+- HLS (HTTP Live Streaming) format
+- CloudFront CDN delivery
+- Timed metadata for song information
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-# Create a new folder anywhere on your computer
-mkdir my-web-project
-cd my-web-project
-
-# Copy all these files into that folder:
-# - server.js
-# - database.js
-# - package.json
-# - index.html
-# - style.css
-# - app.js
-
-# Create a 'public' folder and move the frontend files
-mkdir public
-mv index.html public/
-mv style.css public/
-mv app.js public/
+git clone https://github.com/aavella25/RadioCalico.git
+cd RadioCalico
 ```
 
-### 3. Install Dependencies
-
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-This installs:
-- `express` - Web server framework
-- `sqlite3` - Database
-- `nodemon` - Auto-restart tool (dev only)
-
-### 4. Start the Server
-
+3. **Start the server**
 ```bash
-# Development mode (auto-restarts on file changes)
+# Development mode (auto-restart on changes)
 npm run dev
 
-# OR production mode
+# Production mode
 npm start
 ```
 
-### 5. Open Your Browser
+4. **Open your browser**
+```
+http://localhost:3000
+```
 
-Navigate to: **http://localhost:3000**
-
-You'll see a user management interface where you can:
-- View all users
-- Add new users
-- Delete users
+The stream will start automatically and you'll see the current song information with rating controls.
 
 ## 📁 Project Structure
 
 ```
-my-web-project/
-│
-├── server.js          # Main Express server + API routes
-├── database.js        # SQLite database setup
-├── package.json       # Dependencies and scripts
-├── database.db        # SQLite database file (auto-created)
-│
-└── public/           # Frontend files (served by Express)
-    ├── index.html    # Main HTML page
-    ├── style.css     # Styles
-    └── app.js        # Frontend JavaScript (API calls)
+radiocalico/
+├── server.js                # Express server and API routes
+├── database.js              # SQLite database setup and queries
+├── package.json             # Dependencies and scripts
+├── database.db              # SQLite database (auto-generated)
+├── .gitignore               # Git ignore rules
+├── CLAUDE.md                # Project documentation for Claude Code
+├── README.md                # This file
+├── SETUP_INSTRUCTIONS.md    # Detailed setup guide
+├── RATING_SYSTEM_GUIDE.md   # Rating system documentation
+└── public/                  # Frontend files
+    ├── index.html           # Main HTML structure
+    ├── radio-calico.css     # Retro-futuristic styling
+    └── radio-calico.js      # Streaming and rating functionality
 ```
 
 ## 🔌 API Endpoints
 
-Your server has these endpoints:
-
+### Song Ratings
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/users` | Get all users |
-| GET | `/api/users/:id` | Get specific user |
+| GET | `/api/ratings/:songId?userId=xxx` | Get vote counts and user's rating for a song |
+| POST | `/api/ratings` | Submit or update a rating (up/down) |
+
+### User Management (Legacy)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | List all users |
+| GET | `/api/users/:id` | Get single user |
 | POST | `/api/users` | Create new user |
 | DELETE | `/api/users/:id` | Delete user |
-| GET | `/api/health` | Check server status |
 
-### Example API Usage
+### Health Check
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Server status check |
 
-**Create a user:**
+### Rating API Example
+
+**Submit a rating:**
 ```bash
-curl -X POST http://localhost:3000/api/users \
+curl -X POST http://localhost:3000/api/ratings \
   -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com"}'
+  -d '{
+    "songId": "base64_encoded_song_id",
+    "userId": "user_browser_id",
+    "rating": "up",
+    "artist": "Artist Name",
+    "title": "Song Title"
+  }'
 ```
 
-**Get all users:**
+**Get ratings for a song:**
 ```bash
-curl http://localhost:3000/api/users
+curl "http://localhost:3000/api/ratings/song_id_here?userId=user_id_here"
 ```
 
-## 🛠️ Customizing Your App
+## 🎨 Design
 
-### Add a New Database Table
+Radio Calico features a **retro-futuristic aesthetic** inspired by:
+- 1980s CRT monitors with scanline effects
+- Amber monochrome terminals
+- Art deco brass accents
+- Vintage audio equipment
 
-Edit `database.js`:
+**Color Palette:**
+- Primary: Amber (#ff9500)
+- Background: Warm Black (#1a1410)
+- Accents: Brass (#b8860b)
+- Glow effects and shadow layers
 
-```javascript
-db.run(`
-  CREATE TABLE IF NOT EXISTS products (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    price REAL NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+**Typography:**
+- Headers: Orbitron (futuristic geometric)
+- Body: Share Tech Mono (monospace terminal)
+
+## 🎵 Stream Configuration
+
+The HLS stream is currently configured to:
+- **URL**: `https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8`
+- **Format**: HLS (HTTP Live Streaming)
+- **Metadata**: Timed metadata for artist/title information
+
+To change the stream source, edit the `streamUrl` variable in `public/radio-calico.js` (around line 21).
+
+## 🗄️ Database Schema
+
+### `ratings` table
+```sql
+CREATE TABLE ratings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  song_id TEXT NOT NULL,
+  artist TEXT,
+  title TEXT,
+  user_id TEXT NOT NULL,
+  rating TEXT NOT NULL CHECK(rating IN ('up', 'down')),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(song_id, user_id)
+);
 ```
 
-### Add a New API Route
+- Song IDs are Base64-encoded: `btoa(artist + "|" + title)`
+- User IDs are stored in browser localStorage
+- One vote per user per song (enforced by UNIQUE constraint)
+- Users can update their vote by rating the same song again
 
-Edit `server.js`:
+## 🔧 Development
 
-```javascript
-app.get('/api/products', (req, res) => {
-  db.all('SELECT * FROM products', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ products: rows });
-  });
-});
-```
+### File Organization
+- **HTML**: Structure only in `public/index.html`
+- **CSS**: All styling in `public/radio-calico.css`
+- **JavaScript**: All functionality in `public/radio-calico.js`
 
-### Modify the Frontend
+### Key Components
+1. **HLS Player** - Initializes stream, handles playback
+2. **Metadata Polling** - Fetches song info every 10 seconds
+3. **Rating System** - Manages votes, updates UI
+4. **Visualizer** - Web Audio API frequency analysis
+5. **History Display** - Shows recently played tracks
 
-Edit files in the `public/` folder:
-- `index.html` - Structure
-- `style.css` - Design
-- `app.js` - Functionality
+### Making Changes
 
-## 🎓 Learning Path
+**Update styling:**
+Edit `public/radio-calico.css` and hard refresh (Ctrl+F5)
 
-1. **Start Simple** - Understand how the current user management works
-2. **Modify** - Change the styling, add new fields
-3. **Expand** - Add new tables/features (products, blog posts, etc.)
-4. **Connect** - Try connecting to a real PostgreSQL or MySQL database
-5. **Deploy** - Learn to deploy to platforms like Heroku, Railway, or Vercel
+**Modify functionality:**
+Edit `public/radio-calico.js` - server restarts automatically in dev mode
+
+**Change stream source:**
+Update `streamUrl` in `public/radio-calico.js`
+
+**Database changes:**
+Edit schema in `database.js`, then delete `database.db` to rebuild
 
 ## 💡 Tips
 
-- **Port in use?** Change `PORT = 3000` in `server.js` to `3001` or another number
-- **See console logs** - Check your terminal for server messages and errors
-- **Database reset** - Delete `database.db` and restart to start fresh
-- **Use nodemon** - Run `npm run dev` so the server restarts on file changes
+- **Port conflicts**: Change `PORT` in `server.js` if port 3000 is in use
+- **Database reset**: Delete `database.db` and restart to clear all data
+- **User ID**: Stored in localStorage as `radioCalicoUserId`
+- **Hard refresh**: Use Ctrl+F5 to clear cached CSS/JS after changes
+- **Stream issues**: Check browser console for HLS.js errors
 
 ## 🐛 Troubleshooting
 
-**Cannot find module 'express'**
-→ Run `npm install` to install dependencies
+**Stream won't play:**
+- Check browser console for errors
+- Verify stream URL is accessible
+- Ensure browser supports HLS (most modern browsers do)
 
-**Port already in use**
-→ Change the PORT in `server.js` or kill the process using that port
+**Ratings not saving:**
+- Check network tab for API errors
+- Verify database.db exists and has write permissions
+- Check server logs for SQLite errors
 
-**Database errors**
-→ Delete `database.db` and restart the server
+**No audio visualizer:**
+- Click play button first (Web Audio requires user interaction)
+- Check if browser supports Web Audio API
 
-**Browser can't connect**
-→ Make sure server is running and check for errors in terminal
+## 📝 License
 
-## 🚀 Next Steps
+This project is open source and available under the MIT License.
 
-- Add authentication (login/register)
-- Implement sessions or JWT tokens
-- Connect to a PostgreSQL database
-- Add file upload functionality
-- Build a REST API for a mobile app
-- Learn about ORMs (Sequelize, Prisma)
-- Deploy your app to the cloud
+## 🤝 Contributing
 
-## 📚 Resources
-
-- [Express Documentation](https://expressjs.com/)
-- [SQLite Documentation](https://www.sqlite.org/docs.html)
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [MDN Web Docs](https://developer.mozilla.org/)
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
 
 ---
 
-**Happy Coding! 🎉**
+**Built with ❤️ for music lovers everywhere**
 
-If you have questions or run into issues, feel free to ask!
+*Streaming the future, one byte at a time* 📻✨
