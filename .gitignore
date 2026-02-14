@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Runtime Database
+database.db
+
+# Backup files
+*.backup.js
+
+# Compressed files and extracted folders
+*.zip
+files (1)/
+files (2)/
+files (3)/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build output
+dist/
+build/

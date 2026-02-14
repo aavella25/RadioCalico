@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Calico - Lossless Streaming</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="radio-calico.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="station-name">RADIO CALICO</h1>
+            <p class="subtitle">Lossless HLS Streaming Platform</p>
+        </header>
+
+        <!-- Radio Player Section -->
+        <div class="radio-player">
+            <!-- Now Playing -->
+            <div class="now-playing">
+                <div class="album-art-container">
+                    <img src="https://d3d4yli4hf5bmh.cloudfront.net/cover.jpg" 
+                         alt="Album Art" 
+                         class="album-art" 
+                         id="albumArt"
+                         onerror="this.style.display='none'">
+                </div>
+                <div style="flex: 1; position: relative; z-index: 1;">
+                    <div class="now-playing-label">Now Playing</div>
+                    <div class="track-info">
+                        <div class="track-title" id="trackTitle">Loading...</div>
+                        <div class="track-artist" id="trackArtist">—</div>
+                        <div class="track-details">
+                            <span id="trackAlbum">—</span>
+                            <span id="trackYear">—</span>
+                            <span id="badges"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating Section -->
+                    <div class="rating-section">
+                        <div class="rating-display">
+                            <span class="rating-count" id="thumbsUpCount">
+                                <span class="rating-icon">👍</span>
+                                <span class="rating-number">0</span>
+                            </span>
+                            <span class="rating-count" id="thumbsDownCount">
+                                <span class="rating-icon">👎</span>
+                                <span class="rating-number">0</span>
+                            </span>
+                        </div>
+                        <div class="rating-buttons">
+                            <button class="rating-btn" id="thumbsUpBtn" onclick="rateSong('up')">
+                                <span>👍 Like</span>
+                            </button>
+                            <button class="rating-btn" id="thumbsDownBtn" onclick="rateSong('down')">
+                                <span>👎 Dislike</span>
+                            </button>
+                        </div>
+                        <div class="rating-message" id="ratingMessage"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Quality -->
+            <div class="quality-display">
+                <div class="quality-item">
+                    <div class="quality-label">Bit Depth</div>
+                    <div class="quality-value" id="bitDepth">—</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-label">Sample Rate</div>
+                    <div class="quality-value" id="sampleRate">—</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-label">Quality</div>
+                    <div class="quality-value">Lossless</div>
+                </div>
+            </div>
+
+            <!-- Stream Status -->
+            <div class="frequency-display">
+                <div class="status-text" id="status">READY TO STREAM</div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="visualizer" id="visualizer"></div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-play" id="playBtn">
+                    <span>PLAY STREAM</span>
+                </button>
+            </div>
+
+            <!-- Volume -->
+            <div class="volume-control">
+                <span class="volume-label">Volume</span>
+                <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+                <span class="volume-value" id="volumeValue">70%</span>
+            </div>
+        </div>
+
+        <!-- Recently Played Section -->
+        <div class="recently-played">
+            <h2 class="section-title">Recently Played</h2>
+            <div class="history-list" id="historyList">
+                <p class="loading">Loading history...</p>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="user-section">
+            <h2 class="section-title">Listener Directory</h2>
+            
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                <div class="controls">
+                    <button type="submit" class="btn">
+                        <span>Join Directory</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="users-list">
+                <h3 class="section-title" style="font-size: 1.3em; margin-bottom: 20px;">Active Listeners</h3>
+                <div id="usersList">
+                    <p class="loading">Loading listeners...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio" preload="none"></audio>
+
+    <script src="radio-calico.js"></script>
+</body>
+</html>

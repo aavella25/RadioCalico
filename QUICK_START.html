@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start Guide - Web Prototype Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-right: 15px;
+        }
+        .step h2 {
+            display: inline-block;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .file-tree {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        ul {
+            margin-left: 25px;
+            margin-top: 10px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: white;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Quick Start Guide</h1>
+        <p class="subtitle">Your Node.js + Express + SQLite Development Environment</p>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h2>Install Node.js</h2>
+            <p>If you don't have Node.js installed, download it from <strong>https://nodejs.org/</strong></p>
+            <p>Choose the <highlight class="highlight">LTS (Long Term Support)</highlight> version</p>
+            <div class="code-block">node --version  # Should show v18 or higher</div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h2>Set Up Project Folder</h2>
+            <p>Create a new folder and copy all the files you downloaded into it:</p>
+            <div class="file-tree">
+my-web-project/
+├── server.js           ← Backend server
+├── database.js         ← Database setup
+├── package.json        ← Project config
+├── README.md          ← Full documentation
+├── .gitignore         ← Git ignore file
+└── public/            ← Frontend files
+    ├── index.html
+    ├── style.css
+    └── app.js
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h2>Install Dependencies</h2>
+            <p>Open a terminal in your project folder and run:</p>
+            <div class="code-block">npm install</div>
+            <p>This installs Express, SQLite, and Nodemon (auto-restart tool)</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h2>Start the Server</h2>
+            <div class="code-block">npm run dev</div>
+            <p>You should see:</p>
+            <div class="success">
+                ✅ Connected to SQLite database<br>
+                📋 Users table ready<br>
+                🚀 Server running at http://localhost:3000
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h2>Open in Browser</h2>
+            <p>Navigate to: <strong>http://localhost:3000</strong></p>
+            <p>You'll see a user management interface where you can add, view, and delete users!</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Troubleshooting:</strong>
+            <ul>
+                <li><strong>Port already in use?</strong> Change <code>PORT = 3000</code> in server.js to 3001</li>
+                <li><strong>Module not found?</strong> Make sure you ran <code>npm install</code></li>
+                <li><strong>Database errors?</strong> Delete database.db and restart</li>
+            </ul>
+        </div>
+
+        <h2 style="margin-top: 40px; color: #667eea; text-align: center;">✨ What You've Built</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🌐 Web Server</h3>
+                <p>Express running on port 3000</p>
+            </div>
+            <div class="feature-card">
+                <h3>🗄️ Database</h3>
+                <p>SQLite with user management</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔌 REST API</h3>
+                <p>Full CRUD operations</p>
+            </div>
+            <div class="feature-card">
+                <h3>💻 Frontend</h3>
+                <p>Beautiful responsive UI</p>
+            </div>
+        </div>
+
+        <div class="success" style="margin-top: 40px;">
+            <strong>🎉 Next Steps:</strong>
+            <ul>
+                <li>Explore the code - understand how it works</li>
+                <li>Modify the styling in <code>public/style.css</code></li>
+                <li>Add new features (search, edit user, etc.)</li>
+                <li>Create new database tables</li>
+                <li>Build your own project on top of this foundation!</li>
+            </ul>
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; color: #666; font-size: 1.1em;">
+            📚 For detailed documentation, check <strong>README.md</strong>
+        </p>
+    </div>
+</body>
+</html>

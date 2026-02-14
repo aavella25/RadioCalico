@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Calico - Lossless Streaming</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --amber: #ff9500;
+            --amber-glow: rgba(255, 149, 0, 0.6);
+            --warm-black: #1a1410;
+            --warm-dark: #2d2520;
+            --metal: #4a4542;
+            --brass: #b8860b;
+            --white: #fef6e4;
+            --green: #2ecc71;
+            --blue: #3498db;
+            --purple: #9b59b6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: radial-gradient(ellipse at top, #2d2520, #1a1410);
+            min-height: 100vh;
+            color: var(--white);
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.3;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .station-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--amber) 0%, #ffc947 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            animation: glow 3s ease-in-out infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px var(--amber-glow));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px var(--amber-glow));
+            }
+        }
+
+        .subtitle {
+            color: var(--brass);
+            font-size: 0.9em;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .radio-player {
+            background: linear-gradient(135deg, var(--warm-dark) 0%, var(--warm-black) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 
+                0 30px 90px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px;
+            position: relative;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .radio-player::before,
+        .radio-player::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--brass);
+            opacity: 0.5;
+        }
+
+        .radio-player::before {
+            top: 15px;
+            left: 15px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .radio-player::after {
+            bottom: 15px;
+            right: 15px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* Now Playing Section */
+        .now-playing {
+            background: linear-gradient(180deg, #000 0%, #1a1410 100%);
+            border: 3px solid var(--metal);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                inset 0 2px 10px rgba(0, 0, 0, 0.8),
+                0 2px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .now-playing::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 149, 0, 0.1), transparent);
+            animation: scan 3s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .album-art-container {
+            position: relative;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .album-art {
+            width: 200px;
+            height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 3px solid var(--brass);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.6),
+                0 0 20px var(--amber-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .album-art:hover {
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.8),
+                0 0 30px var(--amber-glow),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .album-art.loading {
+            opacity: 0.5;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .now-playing-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85em;
+            color: var(--brass);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .track-info {
+            position: relative;
+            z-index: 1;
+        }
+
+        .track-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            color: var(--amber);
+            text-shadow: 0 0 20px var(--amber-glow);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .track-artist {
+            font-size: 1.4em;
+            color: var(--white);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .track-details {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: var(--brass);
+        }
+
+        .track-details span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .badge-new {
+            background: linear-gradient(135deg, var(--green) 0%, #27ae60 100%);
+            color: white;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .badge-summer {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .badge-vidgames {
+            background: linear-gradient(135deg, var(--purple) 0%, #8e44ad 100%);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Rating Section */
+        .rating-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--metal);
+        }
+
+        .rating-display {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .rating-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+        }
+
+        .rating-icon {
+            font-size: 1.5em;
+            filter: drop-shadow(0 0 10px var(--amber-glow));
+        }
+
+        .rating-number {
+            color: var(--amber);
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .rating-btn {
+            background: linear-gradient(135deg, var(--metal) 0%, var(--warm-dark) 100%);
+            border: 2px solid var(--brass);
+            color: var(--white);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            font-weight: 700;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 3px 10px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .rating-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--amber);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+        }
+
+        .rating-btn:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .rating-btn:hover {
+            border-color: var(--amber);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 5px 20px rgba(255, 149, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .rating-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .rating-btn:disabled:hover {
+            border-color: var(--brass);
+            box-shadow: 
+                0 3px 10px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .rating-btn:disabled::before {
+            display: none;
+        }
+
+        .rating-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .rating-btn.voted {
+            background: linear-gradient(135deg, var(--amber) 0%, #b86f00 100%);
+            border-color: var(--amber);
+            box-shadow: 
+                0 5px 20px rgba(255, 149, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .rating-message {
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--brass);
+            min-height: 20px;
+            font-style: italic;
+        }
+
+        .rating-message.success {
+            color: var(--green);
+        }
+
+        .rating-message.error {
+            color: #e74c3c;
+        }
+
+        /* Audio Quality Display */
+        .quality-display {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .quality-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--metal);
+            border-radius: 8px;
+            padding: 12px 20px;
+            text-align: center;
+        }
+
+        .quality-label {
+            font-size: 0.7em;
+            color: var(--brass);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .quality-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+            color: var(--amber);
+            font-weight: 700;
+        }
+
+        .frequency-display {
+            background: linear-gradient(180deg, #000 0%, #1a1410 100%);
+            border: 3px solid var(--metal);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 
+                inset 0 2px 10px rgba(0, 0, 0, 0.8),
+                0 2px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .status-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            text-align: center;
+            color: var(--amber);
+            text-shadow: 0 0 20px var(--amber-glow);
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .status-text.playing {
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 4px;
+            height: 80px;
+            margin: 25px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .bar {
+            width: 8px;
+            background: linear-gradient(to top, var(--amber), #ffc947);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.1s ease;
+            box-shadow: 0 0 10px var(--amber-glow);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--metal) 0%, var(--warm-dark) 100%);
+            border: 3px solid var(--brass);
+            color: var(--white);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            padding: 15px 35px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 5px 15px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--amber);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            border-color: var(--amber);
+            box-shadow: 
+                0 5px 25px rgba(255, 149, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-play {
+            padding: 18px 50px;
+            font-size: 1.2em;
+        }
+
+        .btn-play.playing {
+            background: linear-gradient(135deg, var(--amber) 0%, #b86f00 100%);
+            border-color: var(--amber);
+            box-shadow: 
+                0 5px 25px rgba(255, 149, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .volume-label {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--brass);
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            width: 200px;
+            height: 8px;
+            background: linear-gradient(to right, var(--metal) 0%, var(--warm-dark) 100%);
+            border-radius: 5px;
+            outline: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--amber) 0%, #ffc947 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 
+                0 0 10px var(--amber-glow),
+                0 3px 8px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--amber) 0%, #ffc947 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 
+                0 0 10px var(--amber-glow),
+                0 3px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .volume-value {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--amber);
+            font-size: 1.1em;
+            font-weight: 700;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* Recently Played Section */
+        .recently-played {
+            background: linear-gradient(135deg, var(--warm-dark) 0%, var(--warm-black) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 
+                0 30px 90px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.8);
+            animation: fadeIn 1.4s ease-out;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8em;
+            color: var(--amber);
+            margin-bottom: 25px;
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 3px solid var(--brass);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 149, 0, 0.1);
+            border-left-color: var(--amber);
+            transform: translateX(5px);
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-title {
+            color: var(--white);
+            font-size: 1.1em;
+            margin-bottom: 3px;
+        }
+
+        .history-artist {
+            color: var(--brass);
+            font-size: 0.9em;
+        }
+
+        .history-number {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--brass);
+            font-size: 1.2em;
+            font-weight: 700;
+            opacity: 0.5;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .user-section {
+            background: linear-gradient(135deg, var(--warm-dark) 0%, var(--warm-black) 100%);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 
+                0 30px 90px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.8);
+            animation: fadeIn 1.6s ease-out;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--brass);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--metal);
+            border-radius: 8px;
+            color: var(--white);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--amber);
+            box-shadow: 0 0 15px var(--amber-glow);
+        }
+
+        .users-list {
+            margin-top: 30px;
+        }
+
+        .user-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--amber);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .user-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 149, 0, 0.1);
+        }
+
+        .user-info h3 {
+            color: var(--white);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            color: var(--brass);
+            font-size: 0.9em;
+            margin-bottom: 3px;
+        }
+
+        .user-id {
+            font-size: 0.75em !important;
+            opacity: 0.6;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            border-color: #c0392b;
+            padding: 10px 25px;
+            font-size: 0.85em;
+        }
+
+        .btn-danger:hover::before {
+            background: #e74c3c;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--brass);
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .station-name {
+                font-size: 2.2em;
+                letter-spacing: 3px;
+            }
+
+            .radio-player,
+            .recently-played,
+            .user-section {
+                padding: 25px 20px;
+            }
+
+            .now-playing {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .album-art {
+                width: 180px;
+                height: 180px;
+            }
+
+            .track-title {
+                font-size: 1.5em;
+            }
+
+            .track-artist {
+                font-size: 1.1em;
+            }
+
+            .track-details {
+                justify-content: center;
+            }
+
+            .rating-display {
+                gap: 20px;
+            }
+
+            .rating-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .rating-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .user-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .volume-slider {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="station-name">RADIO CALICO</h1>
+            <p class="subtitle">Lossless HLS Streaming Platform</p>
+        </header>
+
+        <!-- Radio Player Section -->
+        <div class="radio-player">
+            <!-- Now Playing -->
+            <div class="now-playing">
+                <div class="album-art-container">
+                    <img src="https://d3d4yli4hf5bmh.cloudfront.net/cover.jpg" 
+                         alt="Album Art" 
+                         class="album-art" 
+                         id="albumArt"
+                         onerror="this.style.display='none'">
+                </div>
+                <div style="flex: 1; position: relative; z-index: 1;">
+                    <div class="now-playing-label">Now Playing</div>
+                    <div class="track-info">
+                        <div class="track-title" id="trackTitle">Loading...</div>
+                        <div class="track-artist" id="trackArtist">—</div>
+                        <div class="track-details">
+                            <span id="trackAlbum">—</span>
+                            <span id="trackYear">—</span>
+                            <span id="badges"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating Section -->
+                    <div class="rating-section">
+                        <div class="rating-display">
+                            <span class="rating-count" id="thumbsUpCount">
+                                <span class="rating-icon">👍</span>
+                                <span class="rating-number">0</span>
+                            </span>
+                            <span class="rating-count" id="thumbsDownCount">
+                                <span class="rating-icon">👎</span>
+                                <span class="rating-number">0</span>
+                            </span>
+                        </div>
+                        <div class="rating-buttons">
+                            <button class="rating-btn" id="thumbsUpBtn" onclick="rateSong('up')">
+                                <span>👍 Like</span>
+                            </button>
+                            <button class="rating-btn" id="thumbsDownBtn" onclick="rateSong('down')">
+                                <span>👎 Dislike</span>
+                            </button>
+                        </div>
+                        <div class="rating-message" id="ratingMessage"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Quality -->
+            <div class="quality-display">
+                <div class="quality-item">
+                    <div class="quality-label">Bit Depth</div>
+                    <div class="quality-value" id="bitDepth">—</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-label">Sample Rate</div>
+                    <div class="quality-value" id="sampleRate">—</div>
+                </div>
+                <div class="quality-item">
+                    <div class="quality-label">Quality</div>
+                    <div class="quality-value">Lossless</div>
+                </div>
+            </div>
+
+            <!-- Stream Status -->
+            <div class="frequency-display">
+                <div class="status-text" id="status">READY TO STREAM</div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="visualizer" id="visualizer"></div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-play" id="playBtn">
+                    <span>PLAY STREAM</span>
+                </button>
+            </div>
+
+            <!-- Volume -->
+            <div class="volume-control">
+                <span class="volume-label">Volume</span>
+                <input type="range" min="0" max="100" value="70" class="volume-slider" id="volumeSlider">
+                <span class="volume-value" id="volumeValue">70%</span>
+            </div>
+        </div>
+
+        <!-- Recently Played Section -->
+        <div class="recently-played">
+            <h2 class="section-title">Recently Played</h2>
+            <div class="history-list" id="historyList">
+                <p class="loading">Loading history...</p>
+            </div>
+        </div>
+
+        <!-- User Management Section -->
+        <div class="user-section">
+            <h2 class="section-title">Listener Directory</h2>
+            
+            <form id="addUserForm">
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                <div class="controls">
+                    <button type="submit" class="btn">
+                        <span>Join Directory</span>
+                    </button>
+                </div>
+            </form>
+
+            <div class="users-list">
+                <h3 class="section-title" style="font-size: 1.3em; margin-bottom: 20px;">Active Listeners</h3>
+                <div id="usersList">
+                    <p class="loading">Loading listeners...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio" preload="none"></audio>
+
+    <script>
+        // ========== RADIO PLAYER ==========
+        const audio = document.getElementById('audio');
+        const playBtn = document.getElementById('playBtn');
+        const playBtnText = playBtn.querySelector('span');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const status = document.getElementById('status');
+        const visualizer = document.getElementById('visualizer');
+        
+        // Metadata elements
+        const trackTitle = document.getElementById('trackTitle');
+        const trackArtist = document.getElementById('trackArtist');
+        const trackAlbum = document.getElementById('trackAlbum');
+        const trackYear = document.getElementById('trackYear');
+        const badges = document.getElementById('badges');
+        const bitDepth = document.getElementById('bitDepth');
+        const sampleRate = document.getElementById('sampleRate');
+        const historyList = document.getElementById('historyList');
+        const albumArt = document.getElementById('albumArt');
+        
+        const streamUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8';
+        const metadataUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/metadatav2.json';
+        const albumArtUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/cover.jpg';
+        
+        let isPlaying = false;
+        let hls;
+        let analyser;
+        let audioContext;
+        let dataArray;
+        let metadataInterval;
+        let currentSongId = null;
+        let userId = null;
+
+        // Generate or retrieve user ID
+        function getUserId() {
+            if (!userId) {
+                userId = localStorage.getItem('radioCalicoUserId');
+                if (!userId) {
+                    userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('radioCalicoUserId', userId);
+                }
+            }
+            return userId;
+        }
+
+        // Get current song identifier
+        function getCurrentSongId() {
+            const artist = trackArtist.textContent;
+            const title = trackTitle.textContent;
+            if (artist && title && artist !== '—' && title !== 'Loading...') {
+                return btoa(artist + '::' + title); // Base64 encode for safe ID
+            }
+            return null;
+        }
+
+        // Create visualizer bars
+        for (let i = 0; i < 40; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '10px';
+            visualizer.appendChild(bar);
+        }
+
+        const bars = document.querySelectorAll('.bar');
+
+        // Fetch and display metadata
+        async function fetchMetadata() {
+            try {
+                const timestamp = Date.now();
+                const response = await fetch(metadataUrl + '?t=' + timestamp);
+                const data = await response.json();
+                
+                // Update current track
+                trackTitle.textContent = data.title || 'Unknown Track';
+                trackArtist.textContent = data.artist || 'Unknown Artist';
+                trackAlbum.textContent = data.album ? `📀 ${data.album}` : '';
+                trackYear.textContent = data.date ? `📅 ${data.date}` : '';
+                
+                // Update audio quality
+                bitDepth.textContent = data.bit_depth ? `${data.bit_depth}-bit` : '16-bit';
+                sampleRate.textContent = data.sample_rate ? `${(data.sample_rate / 1000).toFixed(1)}kHz` : '44.1kHz';
+                
+                // Update album art with cache busting
+                albumArt.classList.add('loading');
+                albumArt.src = albumArtUrl + '?t=' + timestamp;
+                albumArt.onload = function() {
+                    albumArt.classList.remove('loading');
+                    albumArt.style.display = 'block';
+                };
+                
+                // Update badges
+                let badgeHTML = '';
+                if (data.is_new) {
+                    badgeHTML += '<span class="badge badge-new">🆕 New</span>';
+                }
+                if (data.is_summer) {
+                    badgeHTML += '<span class="badge badge-summer">☀️ Summer Hit</span>';
+                }
+                if (data.is_vidgames) {
+                    badgeHTML += '<span class="badge badge-vidgames">🎮 Video Games</span>';
+                }
+                badges.innerHTML = badgeHTML;
+                
+                // Update history
+                updateHistory(data);
+                
+                // Update ratings for new song
+                const newSongId = getCurrentSongId();
+                if (newSongId && newSongId !== currentSongId) {
+                    currentSongId = newSongId;
+                    fetchRatings();
+                }
+                
+            } catch (error) {
+                console.error('Metadata fetch error:', error);
+            }
+        }
+
+        // Fetch ratings for current song
+        async function fetchRatings() {
+            try {
+                if (!currentSongId) return;
+                
+                const userId = getUserId();
+                const response = await fetch(`${API_URL}/ratings/${currentSongId}?userId=${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateRatingDisplay(data);
+                }
+            } catch (error) {
+                console.error('Rating fetch error:', error);
+            }
+        }
+
+        // Update rating display
+        function updateRatingDisplay(data) {
+            const thumbsUpCount = document.querySelector('#thumbsUpCount .rating-number');
+            const thumbsDownCount = document.querySelector('#thumbsDownCount .rating-number');
+            const thumbsUpBtn = document.getElementById('thumbsUpBtn');
+            const thumbsDownBtn = document.getElementById('thumbsDownBtn');
+            const ratingMessage = document.getElementById('ratingMessage');
+            
+            thumbsUpCount.textContent = data.thumbsUp || 0;
+            thumbsDownCount.textContent = data.thumbsDown || 0;
+            
+            // Reset buttons
+            thumbsUpBtn.classList.remove('voted');
+            thumbsDownBtn.classList.remove('voted');
+            thumbsUpBtn.disabled = false;
+            thumbsDownBtn.disabled = false;
+            ratingMessage.textContent = '';
+            ratingMessage.className = 'rating-message';
+            
+            // Highlight user's vote if they already voted
+            if (data.userVote) {
+                if (data.userVote === 'up') {
+                    thumbsUpBtn.classList.add('voted');
+                    thumbsUpBtn.disabled = true;
+                    thumbsDownBtn.disabled = true;
+                    ratingMessage.textContent = 'You liked this track';
+                    ratingMessage.classList.add('success');
+                } else if (data.userVote === 'down') {
+                    thumbsDownBtn.classList.add('voted');
+                    thumbsUpBtn.disabled = true;
+                    thumbsDownBtn.disabled = true;
+                    ratingMessage.textContent = 'You disliked this track';
+                    ratingMessage.classList.add('success');
+                }
+            }
+        }
+
+        // Rate a song
+        async function rateSong(type) {
+            try {
+                if (!currentSongId) {
+                    showRatingMessage('Please wait for song to load', 'error');
+                    return;
+                }
+                
+                const userId = getUserId();
+                const artist = trackArtist.textContent;
+                const title = trackTitle.textContent;
+                
+                const response = await fetch(`${API_URL}/ratings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        songId: currentSongId,
+                        artist: artist,
+                        title: title,
+                        userId: userId,
+                        rating: type
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showRatingMessage(data.message || 'Rating saved!', 'success');
+                    fetchRatings(); // Refresh ratings
+                } else {
+                    showRatingMessage(data.error || 'Failed to save rating', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Rating error:', error);
+                showRatingMessage('Network error', 'error');
+            }
+        }
+
+        // Show rating message
+        function showRatingMessage(message, type) {
+            const ratingMessage = document.getElementById('ratingMessage');
+            ratingMessage.textContent = message;
+            ratingMessage.className = 'rating-message ' + type;
+        }
+
+        // Make rateSong available globally
+        window.rateSong = rateSong;
+
+        // Update recently played history
+        function updateHistory(data) {
+            let historyHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const artist = data[`prev_artist_${i}`];
+                const title = data[`prev_title_${i}`];
+                
+                if (artist && title) {
+                    historyHTML += `
+                        <div class="history-item">
+                            <div class="history-info">
+                                <div class="history-title">${escapeHtml(title)}</div>
+                                <div class="history-artist">${escapeHtml(artist)}</div>
+                            </div>
+                            <div class="history-number">#${i}</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (historyHTML) {
+                historyList.innerHTML = historyHTML;
+            } else {
+                historyList.innerHTML = '<p class="loading">No recent history</p>';
+            }
+        }
+
+        // Start metadata polling
+        function startMetadataPolling() {
+            fetchMetadata(); // Fetch immediately
+            metadataInterval = setInterval(fetchMetadata, 10000); // Then every 10 seconds
+        }
+
+        // Stop metadata polling
+        function stopMetadataPolling() {
+            if (metadataInterval) {
+                clearInterval(metadataInterval);
+                metadataInterval = null;
+            }
+        }
+
+        // Initialize HLS
+        function initHLS() {
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                });
+                
+                hls.loadSource(streamUrl);
+                hls.attachMedia(audio);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    console.log('HLS manifest loaded');
+                    status.textContent = 'STREAM READY';
+                });
+
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('HLS Error:', data);
+                    if (data.fatal) {
+                        status.textContent = 'STREAM ERROR';
+                        status.classList.remove('playing');
+                    }
+                });
+            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                audio.src = streamUrl;
+            } else {
+                status.textContent = 'HLS NOT SUPPORTED';
+                alert('Your browser does not support HLS streaming');
+            }
+        }
+
+        // Initialize Audio Context for visualizer
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(audio);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                analyser.fftSize = 128;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+            }
+        }
+
+        // Visualizer animation
+        function animate() {
+            if (isPlaying && analyser) {
+                analyser.getByteFrequencyData(dataArray);
+                bars.forEach((bar, i) => {
+                    const index = Math.floor(i * dataArray.length / bars.length);
+                    const value = dataArray[index];
+                    const height = Math.max(10, (value / 255) * 80);
+                    bar.style.height = height + 'px';
+                });
+            } else {
+                bars.forEach((bar, i) => {
+                    const baseHeight = 10 + Math.sin(Date.now() / 1000 + i * 0.3) * 5;
+                    bar.style.height = baseHeight + 'px';
+                });
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Play/Pause toggle
+        playBtn.addEventListener('click', async () => {
+            if (!isPlaying) {
+                status.textContent = 'CONNECTING...';
+                try {
+                    initAudioContext();
+                    await audio.play();
+                    isPlaying = true;
+                    playBtn.classList.add('playing');
+                    playBtnText.textContent = 'STOP STREAM';
+                    status.textContent = 'NOW STREAMING';
+                    status.classList.add('playing');
+                    startMetadataPolling();
+                } catch (error) {
+                    console.error('Play error:', error);
+                    status.textContent = 'PLAYBACK FAILED';
+                }
+            } else {
+                audio.pause();
+                isPlaying = false;
+                playBtn.classList.remove('playing');
+                playBtnText.textContent = 'PLAY STREAM';
+                status.textContent = 'STREAM PAUSED';
+                status.classList.remove('playing');
+                stopMetadataPolling();
+            }
+        });
+
+        // Volume control
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            audio.volume = volume;
+            volumeValue.textContent = e.target.value + '%';
+        });
+
+        audio.volume = 0.7;
+        initHLS();
+        animate();
+        startMetadataPolling(); // Start polling immediately to show current track
+        getUserId(); // Initialize user ID
+
+        audio.addEventListener('playing', () => {
+            status.textContent = 'NOW STREAMING';
+        });
+
+        audio.addEventListener('waiting', () => {
+            status.textContent = 'BUFFERING...';
+        });
+
+        audio.addEventListener('error', (e) => {
+            console.error('Audio error:', e);
+            status.textContent = 'STREAM ERROR';
+        });
+
+        // ========== USER MANAGEMENT ==========
+        const API_URL = '/api';
+        const addUserForm = document.getElementById('addUserForm');
+        const usersList = document.getElementById('usersList');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+        });
+
+        addUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showMessage(data.error || 'Failed to add listener', 'error');
+                    return;
+                }
+                
+                showMessage('Successfully joined the directory!', 'success');
+                addUserForm.reset();
+                loadUsers();
+                
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        });
+
+        async function loadUsers() {
+            try {
+                usersList.innerHTML = '<p class="loading">Loading listeners...</p>';
+                
+                const response = await fetch(`${API_URL}/users`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load listeners');
+                }
+                
+                if (data.users.length === 0) {
+                    usersList.innerHTML = '<p class="loading">No listeners yet. Be the first!</p>';
+                    return;
+                }
+                
+                displayUsers(data.users);
+                
+            } catch (error) {
+                usersList.innerHTML = `<div class="message error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayUsers(users) {
+            usersList.innerHTML = users.map(user => `
+                <div class="user-item" data-id="${user.id}">
+                    <div class="user-info">
+                        <h3>${escapeHtml(user.name)}</h3>
+                        <p>📧 ${escapeHtml(user.email)}</p>
+                        <p class="user-id">ID: ${user.id} • Joined: ${formatDate(user.created_at)}</p>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteUser(${user.id})">
+                        <span>Remove</span>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Remove this listener from the directory?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/users/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showMessage(data.error || 'Failed to remove listener', 'error');
+                    return;
+                }
+                
+                showMessage('Listener removed successfully', 'success');
+                loadUsers();
+                
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            const existingMessage = document.querySelector('.message');
+            if (existingMessage) existingMessage.remove();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            
+            const form = addUserForm;
+            form.parentNode.insertBefore(messageDiv, form);
+            
+            setTimeout(() => messageDiv.remove(), 5000);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.deleteUser = deleteUser;
+    </script>
+</body>
+</html>
