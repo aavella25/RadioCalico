@@ -45,7 +45,7 @@ jobs:
 
     - name: Archive test results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: test-results-node-${{ matrix.node-version }}
         path: |
@@ -78,7 +78,7 @@ jobs:
       run: make security-report
 
     - name: Upload security report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: security-report
         path: |
