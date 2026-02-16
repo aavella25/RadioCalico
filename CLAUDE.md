@@ -29,6 +29,11 @@ make prod-test        # Test production deployment
 make backup           # Backup production database
 make db-shell         # Open PostgreSQL shell
 
+# Security
+make security-scan    # Run npm security audit
+make security-fix     # Apply safe security fixes
+make security-report  # Generate detailed report
+
 # Help
 make help             # Show all available targets
 ```
@@ -61,6 +66,27 @@ npm run test:coverage
 ```
 
 **Test Suite**: 63 tests covering backend ratings API and frontend utility functions. Tests use in-memory SQLite database for isolation and speed (~2 seconds for full suite).
+
+### Security Scanning
+```bash
+# Run security audit
+npm audit
+# Or: make security-scan
+
+# Apply safe security fixes (no breaking changes)
+./security-scan.sh fix
+# Or: make security-fix
+
+# Generate detailed security report
+./security-scan.sh report
+# Or: make security-report
+
+# Audit production dependencies only
+./security-scan.sh check-production
+# Or: make security-prod
+```
+
+**Security Script**: `security-scan.sh` provides comprehensive security scanning with npm audit. Generates both machine-readable (JSON) and human-readable (Markdown) reports. Use `security-fix` for safe fixes only, or `security-fix-force` to apply all fixes (may break compatibility).
 
 ### Docker Deployment
 ```bash

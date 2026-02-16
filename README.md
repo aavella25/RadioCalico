@@ -103,6 +103,11 @@ make prod-test        # Test production deployment
 make backup           # Backup production database
 make db-shell         # Open PostgreSQL shell
 
+# Security
+make security-scan    # Run npm security audit
+make security-fix     # Apply safe security fixes
+make security-report  # Generate detailed report
+
 # Management
 make stop             # Stop all services
 make clean            # Clean up containers
@@ -117,6 +122,7 @@ Run `make help` to see the complete list of targets:
 **Development:** `dev`, `dev-local`, `dev-logs`, `dev-test`, `dev-shell`
 **Production:** `prod`, `prod-setup`, `prod-rebuild`, `prod-logs`, `prod-status`, `prod-test`, `prod-shell`
 **Testing:** `test`, `test-watch`, `test-coverage`
+**Security:** `security-scan`, `security-fix`, `security-report`, `security-prod`
 **Database:** `backup`, `restore`, `db-shell`
 **Management:** `install`, `stop`, `clean`, `clean-all`, `status`, `logs`
 
@@ -146,6 +152,13 @@ make prod-test        # Verify deployment
 ```bash
 make backup           # Creates timestamped backup
 make restore FILE=backup_postgres_20260216_095000.sql
+```
+
+**Security scanning:**
+```bash
+make security-scan    # Check for vulnerabilities
+make security-fix     # Apply safe fixes
+make security-report  # Generate detailed report
 ```
 
 ## 🐳 Docker Deployment

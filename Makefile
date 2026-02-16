@@ -1,7 +1,7 @@
 # Makefile for Radio Calico
 # Provides convenient targets for development, production, and testing
 
-.PHONY: help dev prod test stop clean install setup status logs backup restore
+.PHONY: help dev prod test stop clean install setup status logs backup restore security-scan security-fix security-report security-prod
 
 # Default target - show help
 help:
@@ -27,6 +27,12 @@ help:
 	@echo "  make test             Run all tests locally"
 	@echo "  make test-watch       Run tests in watch mode"
 	@echo "  make test-coverage    Run tests with coverage report"
+	@echo ""
+	@echo "Security:"
+	@echo "  make security-scan    Run npm security audit"
+	@echo "  make security-fix     Apply safe security fixes"
+	@echo "  make security-report  Generate detailed security report"
+	@echo "  make security-prod    Audit production dependencies only"
 	@echo ""
 	@echo "Database:"
 	@echo "  make backup           Backup production PostgreSQL database"
@@ -116,6 +122,27 @@ test-watch:
 test-coverage:
 	@echo "🧪 Running tests with coverage..."
 	npm test -- --coverage
+
+# Security targets
+security-scan:
+	@echo "🔒 Running security audit..."
+	@bash security-scan.sh scan
+
+security-fix:
+	@echo "🔧 Applying safe security fixes..."
+	@bash security-scan.sh fix
+
+security-fix-force:
+	@echo "⚠️  Applying all security fixes (may break compatibility)..."
+	@bash security-scan.sh fix --force
+
+security-report:
+	@echo "📄 Generating security reports..."
+	@bash security-scan.sh report
+
+security-prod:
+	@echo "🔒 Auditing production dependencies only..."
+	@bash security-scan.sh check-production
 
 # Database targets
 backup:

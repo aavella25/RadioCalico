@@ -24,6 +24,10 @@ if "%TARGET%"=="prod-shell" goto :prod-shell
 if "%TARGET%"=="test" goto :test
 if "%TARGET%"=="test-watch" goto :test-watch
 if "%TARGET%"=="test-coverage" goto :test-coverage
+if "%TARGET%"=="security-scan" goto :security-scan
+if "%TARGET%"=="security-fix" goto :security-fix
+if "%TARGET%"=="security-report" goto :security-report
+if "%TARGET%"=="security-prod" goto :security-prod
 if "%TARGET%"=="backup" goto :backup
 if "%TARGET%"=="restore" goto :restore
 if "%TARGET%"=="db-shell" goto :db-shell
@@ -60,6 +64,12 @@ echo Testing:
 echo   make.bat test             Run all tests locally
 echo   make.bat test-watch       Run tests in watch mode
 echo   make.bat test-coverage    Run tests with coverage report
+echo.
+echo Security:
+echo   make.bat security-scan    Run npm security audit
+echo   make.bat security-fix     Apply safe security fixes
+echo   make.bat security-report  Generate detailed security report
+echo   make.bat security-prod    Audit production dependencies only
 echo.
 echo Database:
 echo   make.bat backup           Backup production database
@@ -145,6 +155,26 @@ goto :end
 :test-coverage
 echo Running tests with coverage...
 npm test -- --coverage
+goto :end
+
+:security-scan
+echo Running security audit...
+bash security-scan.sh scan
+goto :end
+
+:security-fix
+echo Applying safe security fixes...
+bash security-scan.sh fix
+goto :end
+
+:security-report
+echo Generating security reports...
+bash security-scan.sh report
+goto :end
+
+:security-prod
+echo Auditing production dependencies only...
+bash security-scan.sh check-production
 goto :end
 
 :backup
