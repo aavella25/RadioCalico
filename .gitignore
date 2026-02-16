@@ -42,3 +42,7 @@ build/
 # Test Coverage
 coverage/
 *.lcov
+
+# Security Reports
+audit-report.json
+SECURITY_REPORT.md

@@ -13,10 +13,36 @@ Radio Calico is a web-based streaming radio station with HLS lossless audio stre
 
 ## Development Commands
 
-### Starting the Server
+### Quick Start with Make (Recommended)
+```bash
+# Development
+make dev              # Start development environment (Docker)
+make dev-local        # Start local dev server (npm)
+make test             # Run all tests
+
+# Production
+make prod             # Start production (PostgreSQL + nginx)
+make prod-status      # Check service health
+make prod-test        # Test production deployment
+
+# Database
+make backup           # Backup production database
+make db-shell         # Open PostgreSQL shell
+
+# Security
+make security-scan    # Run npm security audit
+make security-fix     # Apply safe security fixes
+make security-report  # Generate detailed report
+
+# Help
+make help             # Show all available targets
+```
+
+### Starting the Server (npm)
 ```bash
 # Development mode with auto-restart on file changes
 npm run dev
+# Or: make dev-local
 
 # Production mode
 npm start
@@ -28,25 +54,51 @@ The server runs on port 3000 by default. Access at `http://localhost:3000`.
 ```bash
 # Run all tests once
 npm test
+# Or: make test
 
 # Run tests in watch mode (re-runs on file changes)
 npm run test:watch
+# Or: make test-watch
 
 # Run tests with coverage report
 npm run test:coverage
+# Or: make test-coverage
 ```
 
 **Test Suite**: 63 tests covering backend ratings API and frontend utility functions. Tests use in-memory SQLite database for isolation and speed (~2 seconds for full suite).
+
+### Security Scanning
+```bash
+# Run security audit
+npm audit
+# Or: make security-scan
+
+# Apply safe security fixes (no breaking changes)
+./security-scan.sh fix
+# Or: make security-fix
+
+# Generate detailed security report
+./security-scan.sh report
+# Or: make security-report
+
+# Audit production dependencies only
+./security-scan.sh check-production
+# Or: make security-prod
+```
+
+**Security Script**: `security-scan.sh` provides comprehensive security scanning with npm audit. Generates both machine-readable (JSON) and human-readable (Markdown) reports. Use `security-fix` for safe fixes only, or `security-fix-force` to apply all fixes (may break compatibility).
 
 ### Docker Deployment
 ```bash
 # Development (with hot-reload)
 docker-compose up
 # Or: ./docker-dev.sh start
+# Or: make dev
 
-# Production (optimized)
+# Production (optimized with PostgreSQL + nginx)
 docker-compose -f docker-compose.prod.yml up -d
 # Or: ./docker-prod.sh start
+# Or: make prod
 
 # Run tests in container
 docker-compose exec radio-calico-dev npm test
@@ -56,6 +108,34 @@ docker-compose logs -f
 ```
 
 **Docker Features**: Multi-stage builds, dev/prod configurations, health checks, volume persistence, non-root user in production. See [DOCKER.md](DOCKER.md) for full guide.
+
+### CI/CD Pipeline
+```bash
+# GitHub Actions workflows automatically run on push/PR:
+# - Unit tests (Node.js 18.x, 20.x, 22.x)
+# - Security scanning (npm audit)
+# - Code quality checks
+# - Docker build verification
+
+# View workflow results:
+# Go to GitHub → Actions tab
+
+# Run locally what CI runs:
+make test              # Unit tests
+make test-coverage     # Tests with coverage
+make security-scan     # Security audit
+docker build .         # Docker build test
+```
+
+**CI/CD Features**:
+- **Automated Testing**: Runs 63 tests on every commit across multiple Node.js versions
+- **Security Scanning**: npm audit on every commit + weekly scheduled scans
+- **Docker Builds**: Verifies dev and prod images build successfully
+- **Dependabot**: Weekly automated dependency updates
+- **Artifacts**: Test results (7 days), security reports (30 days), weekly audits (90 days)
+- **Status Badges**: CI and security scan status displayed in README
+
+See [.github/workflows/README.md](.github/workflows/README.md) for detailed CI/CD documentation.
 
 ### Database Management
 - Database file: `database.db` (auto-created on first run)

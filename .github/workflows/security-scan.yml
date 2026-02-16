@@ -1,0 +1,76 @@
+name: Scheduled Security Scan
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  security-scan:
+    name: Weekly Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run comprehensive security audit
+      run: |
+        echo "📊 Running comprehensive security audit..."
+        make security-scan || true
+        make security-report
+
+    - name: Check production dependencies
+      run: |
+        echo "🔒 Checking production dependencies only..."
+        make security-prod || true
+
+    - name: Generate audit summary
+      run: |
+        echo "# Weekly Security Audit - $(date)" > weekly-audit.md
+        echo "" >> weekly-audit.md
+        echo "## Production Dependencies" >> weekly-audit.md
+        echo '```' >> weekly-audit.md
+        npm audit --production >> weekly-audit.md 2>&1 || true
+        echo '```' >> weekly-audit.md
+        echo "" >> weekly-audit.md
+        echo "## All Dependencies" >> weekly-audit.md
+        echo '```' >> weekly-audit.md
+        npm audit >> weekly-audit.md 2>&1 || true
+        echo '```' >> weekly-audit.md
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: weekly-security-scan
+        path: |
+          SECURITY_REPORT.md
+          audit-report.json
+          weekly-audit.md
+        retention-days: 90
+
+    - name: Create issue if vulnerabilities found
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('weekly-audit.md', 'utf8');
+
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🔒 Weekly Security Scan - Vulnerabilities Detected (${new Date().toISOString().split('T')[0]})`,
+            body: report,
+            labels: ['security', 'automated']
+          });

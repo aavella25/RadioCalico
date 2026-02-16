@@ -1,5 +1,10 @@
 # 📻 Radio Calico
 
+[![CI - Tests and Security](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml)
+[![Scheduled Security Scan](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A retro-futuristic web-based streaming radio station with HLS lossless audio streaming and an integrated song rating system.
 
 ## ✨ Features
@@ -13,6 +18,8 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - 💾 **Persistent Ratings** - SQLite database stores all song ratings and metadata
 - ✅ **Comprehensive Tests** - 63 tests covering backend API and frontend utilities
 - 🐳 **Docker Support** - Containerized deployment for dev and production
+- 🔒 **Security Scanning** - Automated npm audit with weekly scheduled scans
+- 🚀 **CI/CD Pipeline** - Automated testing and security checks on every commit
 
 ## 🛠️ Tech Stack
 
@@ -37,6 +44,9 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - Docker & Docker Compose
 - Multi-stage builds (dev/prod)
 - Volume persistence
+- GitHub Actions CI/CD
+- Automated testing and security scans
+- Dependabot for dependency updates
 
 ## 🚀 Quick Start
 
@@ -77,6 +87,89 @@ http://localhost:3000
 ```
 
 The stream will start automatically and you'll see the current song information with rating controls.
+
+## ⚡ Make Targets (Recommended)
+
+Radio Calico includes a Makefile for convenient command shortcuts. This is the easiest way to manage the project!
+
+> **Windows Users:** Use `make.bat` instead of `make` (e.g., `make.bat dev`, `make.bat test`)
+>
+> **Linux/Mac Users:** Use standard `make` command
+
+### Quick Commands
+
+```bash
+# Development
+make dev              # Start development environment (Docker)
+make dev-local        # Start local dev server (npm)
+make test             # Run all tests
+
+# Production
+make prod             # Start production (PostgreSQL + nginx)
+make prod-status      # Check service health
+make prod-test        # Test production deployment
+
+# Database
+make backup           # Backup production database
+make db-shell         # Open PostgreSQL shell
+
+# Security
+make security-scan    # Run npm security audit
+make security-fix     # Apply safe security fixes
+make security-report  # Generate detailed report
+
+# Management
+make stop             # Stop all services
+make clean            # Clean up containers
+make status           # Show all service status
+make help             # Show all available targets
+```
+
+### All Available Targets
+
+Run `make help` to see the complete list of targets:
+
+**Development:** `dev`, `dev-local`, `dev-logs`, `dev-test`, `dev-shell`
+**Production:** `prod`, `prod-setup`, `prod-rebuild`, `prod-logs`, `prod-status`, `prod-test`, `prod-shell`
+**Testing:** `test`, `test-watch`, `test-coverage`
+**Security:** `security-scan`, `security-fix`, `security-report`, `security-prod`
+**Database:** `backup`, `restore`, `db-shell`
+**Management:** `install`, `stop`, `clean`, `clean-all`, `status`, `logs`
+
+### Example Workflows
+
+**Starting development:**
+```bash
+make dev              # That's it!
+```
+
+**Running tests:**
+```bash
+make test             # Run once
+make test-watch       # Watch mode
+make test-coverage    # With coverage
+```
+
+**Production deployment:**
+```bash
+make prod-setup       # First time only
+make prod             # Start services
+make prod-status      # Check health
+make prod-test        # Verify deployment
+```
+
+**Database backup:**
+```bash
+make backup           # Creates timestamped backup
+make restore FILE=backup_postgres_20260216_095000.sql
+```
+
+**Security scanning:**
+```bash
+make security-scan    # Check for vulnerabilities
+make security-fix     # Apply safe fixes
+make security-report  # Generate detailed report
+```
 
 ## 🐳 Docker Deployment
 
@@ -141,14 +234,84 @@ Access at: `http://localhost:3000`
 
 **Full documentation:** See [DOCKER.md](DOCKER.md) for comprehensive Docker guide.
 
+## 🚀 CI/CD Pipeline
+
+Radio Calico includes automated testing and security scanning via GitHub Actions.
+
+### Automated Workflows
+
+**CI - Tests and Security** (runs on every push/PR):
+- ✅ Unit tests across Node.js 18.x, 20.x, 22.x
+- ✅ Test coverage reporting (uploaded to Codecov)
+- ✅ Security vulnerability scanning
+- ✅ Code quality checks
+- ✅ Docker build verification
+- ✅ Artifacts: test results (7 days), security reports (30 days)
+
+**Scheduled Security Scan** (runs weekly):
+- 🔒 Comprehensive npm audit
+- 🔒 Production dependency audit
+- 🔒 Automated security reports
+- 🔒 GitHub issue creation for vulnerabilities
+- 🔒 Artifacts: security reports (90 days retention)
+
+**Dependabot** (runs weekly):
+- 📦 Automated dependency updates
+- 📦 Grouped minor/patch updates
+- 📦 Separate PRs for major updates
+- 📦 Docker base image updates
+- 📦 GitHub Actions version updates
+
+### Status Badges
+
+Current build and security status:
+
+[![CI - Tests and Security](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml)
+[![Scheduled Security Scan](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml)
+
+### Viewing Results
+
+**GitHub UI:**
+1. Navigate to repository → **Actions** tab
+2. Select workflow from left sidebar
+3. Click on run to see details
+4. Download artifacts (test results, security reports)
+
+**Local Verification:**
+```bash
+# Run tests locally (matches CI)
+make test
+make test-coverage
+
+# Run security scan locally (matches CI)
+make security-scan
+make security-report
+
+# Build Docker images locally (matches CI)
+docker build -t radio-calico:dev --target development .
+docker build -t radio-calico:prod --target production .
+```
+
+### Workflow Configuration
+
+Workflows are defined in `.github/workflows/`:
+- `ci.yml` - Main CI pipeline (tests, security, linting, Docker)
+- `security-scan.yml` - Weekly security audits
+- `dependabot.yml` - Automated dependency updates
+
+**Documentation:** See [.github/workflows/README.md](.github/workflows/README.md) for detailed workflow documentation.
+
 ## 📁 Project Structure
 
 ```
 radiocalico/
 ├── server.js                # Express server and API routes
 ├── database.js              # SQLite database setup and queries
+├── database-config.js       # Database abstraction layer (SQLite/PostgreSQL)
+├── database-postgres.js     # PostgreSQL implementation
 ├── package.json             # Dependencies and scripts
 ├── database.db              # SQLite database (auto-generated)
+├── Makefile                 # Convenient make targets for dev/prod/test
 ├── .gitignore               # Git ignore rules
 ├── CLAUDE.md                # Project documentation for Claude Code
 ├── README.md                # This file
