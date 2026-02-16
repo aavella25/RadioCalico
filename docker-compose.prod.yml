@@ -1,0 +1,54 @@
+# Docker Compose configuration for Radio Calico - Production
+version: '3.8'
+
+services:
+  radio-calico:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: radio-calico-prod
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persist database
+      - radio-calico-db:/app/data
+      # Optionally mount logs
+      - radio-calico-logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: always
+    networks:
+      - radio-calico-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+
+volumes:
+  radio-calico-db:
+    driver: local
+  radio-calico-logs:
+    driver: local
+
+networks:
+  radio-calico-network:
+    driver: bridge

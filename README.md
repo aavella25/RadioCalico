@@ -12,6 +12,7 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - 🎨 **Retro UI** - Amber/brass themed CRT-style interface with scanlines and glow effects
 - 💾 **Persistent Ratings** - SQLite database stores all song ratings and metadata
 - ✅ **Comprehensive Tests** - 63 tests covering backend API and frontend utilities
+- 🐳 **Docker Support** - Containerized deployment for dev and production
 
 ## 🛠️ Tech Stack
 
@@ -31,6 +32,11 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - HLS (HTTP Live Streaming) format
 - CloudFront CDN delivery
 - Timed metadata for song information
+
+**Deployment:**
+- Docker & Docker Compose
+- Multi-stage builds (dev/prod)
+- Volume persistence
 
 ## 🚀 Quick Start
 
@@ -72,6 +78,69 @@ http://localhost:3000
 
 The stream will start automatically and you'll see the current song information with rating controls.
 
+## 🐳 Docker Deployment
+
+Radio Calico supports Docker for both development and production deployments.
+
+### Quick Start with Docker
+
+**Development:**
+```bash
+# Start development container with hot-reload
+docker-compose up
+
+# Or use helper script
+chmod +x docker-dev.sh
+./docker-dev.sh start
+```
+
+**Production:**
+```bash
+# Start production container
+docker-compose -f docker-compose.prod.yml up -d
+
+# Or use helper script
+chmod +x docker-prod.sh
+./docker-prod.sh start
+```
+
+Access at: `http://localhost:3000`
+
+### Docker Features
+
+**Development Container:**
+- ✅ Hot-reload enabled (nodemon)
+- ✅ Source code mounted
+- ✅ Full dev dependencies
+- ✅ Debugging support
+
+**Production Container:**
+- ✅ Optimized build (multi-stage)
+- ✅ Non-root user
+- ✅ Health checks
+- ✅ Resource limits
+- ✅ Security hardening
+
+### Docker Commands
+
+```bash
+# Development
+./docker-dev.sh start       # Start container
+./docker-dev.sh logs        # View logs
+./docker-dev.sh test        # Run tests
+./docker-dev.sh shell       # Open shell
+./docker-dev.sh stop        # Stop container
+
+# Production
+./docker-prod.sh start      # Start container
+./docker-prod.sh logs       # View logs
+./docker-prod.sh backup     # Backup database
+./docker-prod.sh status     # Check health
+./docker-prod.sh stop       # Stop container
+```
+
+**Full documentation:** See [DOCKER.md](DOCKER.md) for comprehensive Docker guide.
+
 ## 📁 Project Structure
 
 ```
@@ -91,6 +160,13 @@ radiocalico/
 ├── TESTING.md               # Testing guide and documentation
 ├── TEST_SUMMARY.md          # Test results and coverage report
 ├── .testing-quick-ref.md    # Quick reference for testing
+├── Dockerfile               # Multi-stage Docker build
+├── docker-compose.yml       # Development Docker Compose
+├── docker-compose.prod.yml  # Production Docker Compose
+├── .dockerignore            # Docker ignore rules
+├── docker-dev.sh            # Development Docker helper script
+├── docker-prod.sh           # Production Docker helper script
+├── DOCKER.md                # Docker deployment guide
 └── public/                  # Frontend files
     ├── index.html           # Main HTML structure
     ├── radio-calico.css     # Retro-futuristic styling

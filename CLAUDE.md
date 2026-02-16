@@ -38,6 +38,25 @@ npm run test:coverage
 
 **Test Suite**: 63 tests covering backend ratings API and frontend utility functions. Tests use in-memory SQLite database for isolation and speed (~2 seconds for full suite).
 
+### Docker Deployment
+```bash
+# Development (with hot-reload)
+docker-compose up
+# Or: ./docker-dev.sh start
+
+# Production (optimized)
+docker-compose -f docker-compose.prod.yml up -d
+# Or: ./docker-prod.sh start
+
+# Run tests in container
+docker-compose exec radio-calico-dev npm test
+
+# View logs
+docker-compose logs -f
+```
+
+**Docker Features**: Multi-stage builds, dev/prod configurations, health checks, volume persistence, non-root user in production. See [DOCKER.md](DOCKER.md) for full guide.
+
 ### Database Management
 - Database file: `database.db` (auto-created on first run)
 - To reset database: delete `database.db` and restart server
@@ -60,6 +79,13 @@ radiocalico/
 ├── TESTING.md             # Testing guide and documentation
 ├── TEST_SUMMARY.md        # Test results and coverage analysis
 ├── .testing-quick-ref.md  # Quick reference for testing commands
+├── Dockerfile             # Multi-stage Docker build (dev/prod)
+├── docker-compose.yml     # Docker Compose for development
+├── docker-compose.prod.yml # Docker Compose for production
+├── .dockerignore          # Docker build context exclusions
+├── docker-dev.sh          # Development Docker helper script
+├── docker-prod.sh         # Production Docker helper script
+├── DOCKER.md              # Comprehensive Docker deployment guide
 ├── public/                # Static files served by Express
 │   ├── index.html         # Main HTML structure (149 lines)
 │   ├── radio-calico.css   # All styling (875 lines)
@@ -83,6 +109,15 @@ radiocalico/
 - **TESTING.md** - Comprehensive testing documentation
 - **TEST_SUMMARY.md** - Test results and coverage report
 - **.testing-quick-ref.md** - Quick reference card
+
+### Docker Files
+- **Dockerfile** - Multi-stage build supporting development and production
+- **docker-compose.yml** - Development orchestration (hot-reload, mounted source)
+- **docker-compose.prod.yml** - Production orchestration (optimized, secure)
+- **.dockerignore** - Build context exclusions
+- **docker-dev.sh** - Development helper script (start, stop, logs, test, shell)
+- **docker-prod.sh** - Production helper script (start, stop, backup, restore, stats)
+- **DOCKER.md** - Complete Docker deployment guide
 
 ### Legacy Files (Not Currently Used)
 - **app.js** - Original user management demo
@@ -267,6 +302,7 @@ The active UI uses a **retro-futuristic amber/brass theme** with:
 - **Rating updates** are allowed - users can change their vote for the same song
 - **Port conflicts**: If port 3000 is in use, modify `PORT` constant in server.js
 - **Test suite**: 63 tests covering ratings API and frontend utilities (run with `npm test`)
+- **Docker support**: Multi-stage Dockerfile with dev/prod configurations (run with `docker-compose up`)
 - **No build process**: Frontend is vanilla HTML/CSS/JS, no bundler required
 - **Separation of concerns**: HTML (structure), CSS (styling), and JS (functionality) are in separate files for maintainability
 - **Test-driven development**: Backend tests use in-memory database; frontend tests use extracted pure functions
@@ -306,6 +342,26 @@ This project has no formal migration system. To add columns/tables:
 8. See [.testing-quick-ref.md](.testing-quick-ref.md) for quick reference
 
 **Test Philosophy**: Pragmatic testing focused on high-value paths. Backend uses integration tests with in-memory database. Frontend tests pure utility functions. See TEST_SUMMARY.md for detailed coverage report.
+
+### Docker Deployment
+1. **Development**: `docker-compose up` or `./docker-dev.sh start`
+   - Hot-reload enabled with nodemon
+   - Source code mounted for live updates
+   - Full dev dependencies included
+2. **Production**: `docker-compose -f docker-compose.prod.yml up -d` or `./docker-prod.sh start`
+   - Optimized multi-stage build
+   - Runs as non-root user
+   - Health checks enabled
+   - Resource limits applied
+3. **Helper Scripts**:
+   - `./docker-dev.sh` - Development commands (start, stop, logs, test, shell)
+   - `./docker-prod.sh` - Production commands (start, stop, backup, restore, stats)
+4. **Run tests in container**: `docker-compose exec radio-calico-dev npm test`
+5. **Database backup**: `./docker-prod.sh backup` (creates timestamped tar.gz)
+6. **Database restore**: `./docker-prod.sh restore backup_file.tar.gz`
+7. See [DOCKER.md](DOCKER.md) for comprehensive deployment guide
+
+**Docker Philosophy**: Development containers prioritize developer experience (hot-reload, debugging). Production containers prioritize security (non-root), performance (optimized layers), and reliability (health checks, resource limits).
 
 ### Style Guide
 the style guide is called RadioCalico_Style_Guide.txt
