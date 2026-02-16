@@ -1,0 +1,121 @@
+# Docker Compose configuration for Radio Calico - Production with PostgreSQL and nginx
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: radio-calico-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-radiocalico}
+      POSTGRES_USER: ${POSTGRES_USER:-radiocalico}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-radiocalico_secure_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      - radio-calico-postgres-data:/var/lib/postgresql/data
+    networks:
+      - radio-calico-network
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radiocalico"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Resource limits for database
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Node.js backend application
+  radio-calico:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: radio-calico-prod
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - USE_POSTGRES=true
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-radiocalico}
+      - POSTGRES_USER=${POSTGRES_USER:-radiocalico}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-radiocalico_secure_password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - radio-calico-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits for application
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+  # nginx web server
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: radio-calico-nginx
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      # - "443:443"  # Uncomment for HTTPS
+    volumes:
+      # nginx configuration
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Static files
+      - ./public:/usr/share/nginx/html:ro
+      # Logs
+      - radio-calico-nginx-logs:/var/log/nginx
+      # SSL certificates (if using HTTPS)
+      # - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - radio-calico
+    networks:
+      - radio-calico-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Resource limits for nginx
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+
+volumes:
+  radio-calico-postgres-data:
+    driver: local
+  radio-calico-nginx-logs:
+    driver: local
+
+networks:
+  radio-calico-network:
+    driver: bridge
