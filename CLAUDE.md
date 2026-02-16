@@ -109,6 +109,34 @@ docker-compose logs -f
 
 **Docker Features**: Multi-stage builds, dev/prod configurations, health checks, volume persistence, non-root user in production. See [DOCKER.md](DOCKER.md) for full guide.
 
+### CI/CD Pipeline
+```bash
+# GitHub Actions workflows automatically run on push/PR:
+# - Unit tests (Node.js 18.x, 20.x, 22.x)
+# - Security scanning (npm audit)
+# - Code quality checks
+# - Docker build verification
+
+# View workflow results:
+# Go to GitHub → Actions tab
+
+# Run locally what CI runs:
+make test              # Unit tests
+make test-coverage     # Tests with coverage
+make security-scan     # Security audit
+docker build .         # Docker build test
+```
+
+**CI/CD Features**:
+- **Automated Testing**: Runs 63 tests on every commit across multiple Node.js versions
+- **Security Scanning**: npm audit on every commit + weekly scheduled scans
+- **Docker Builds**: Verifies dev and prod images build successfully
+- **Dependabot**: Weekly automated dependency updates
+- **Artifacts**: Test results (7 days), security reports (30 days), weekly audits (90 days)
+- **Status Badges**: CI and security scan status displayed in README
+
+See [.github/workflows/README.md](.github/workflows/README.md) for detailed CI/CD documentation.
+
 ### Database Management
 - Database file: `database.db` (auto-created on first run)
 - To reset database: delete `database.db` and restart server

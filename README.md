@@ -1,5 +1,10 @@
 # 📻 Radio Calico
 
+[![CI - Tests and Security](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml)
+[![Scheduled Security Scan](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A retro-futuristic web-based streaming radio station with HLS lossless audio streaming and an integrated song rating system.
 
 ## ✨ Features
@@ -13,6 +18,8 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - 💾 **Persistent Ratings** - SQLite database stores all song ratings and metadata
 - ✅ **Comprehensive Tests** - 63 tests covering backend API and frontend utilities
 - 🐳 **Docker Support** - Containerized deployment for dev and production
+- 🔒 **Security Scanning** - Automated npm audit with weekly scheduled scans
+- 🚀 **CI/CD Pipeline** - Automated testing and security checks on every commit
 
 ## 🛠️ Tech Stack
 
@@ -37,6 +44,9 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - Docker & Docker Compose
 - Multi-stage builds (dev/prod)
 - Volume persistence
+- GitHub Actions CI/CD
+- Automated testing and security scans
+- Dependabot for dependency updates
 
 ## 🚀 Quick Start
 
@@ -223,6 +233,73 @@ Access at: `http://localhost:3000`
 ```
 
 **Full documentation:** See [DOCKER.md](DOCKER.md) for comprehensive Docker guide.
+
+## 🚀 CI/CD Pipeline
+
+Radio Calico includes automated testing and security scanning via GitHub Actions.
+
+### Automated Workflows
+
+**CI - Tests and Security** (runs on every push/PR):
+- ✅ Unit tests across Node.js 18.x, 20.x, 22.x
+- ✅ Test coverage reporting (uploaded to Codecov)
+- ✅ Security vulnerability scanning
+- ✅ Code quality checks
+- ✅ Docker build verification
+- ✅ Artifacts: test results (7 days), security reports (30 days)
+
+**Scheduled Security Scan** (runs weekly):
+- 🔒 Comprehensive npm audit
+- 🔒 Production dependency audit
+- 🔒 Automated security reports
+- 🔒 GitHub issue creation for vulnerabilities
+- 🔒 Artifacts: security reports (90 days retention)
+
+**Dependabot** (runs weekly):
+- 📦 Automated dependency updates
+- 📦 Grouped minor/patch updates
+- 📦 Separate PRs for major updates
+- 📦 Docker base image updates
+- 📦 GitHub Actions version updates
+
+### Status Badges
+
+Current build and security status:
+
+[![CI - Tests and Security](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/ci.yml)
+[![Scheduled Security Scan](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml/badge.svg)](https://github.com/aavella25/RadioCalico/actions/workflows/security-scan.yml)
+
+### Viewing Results
+
+**GitHub UI:**
+1. Navigate to repository → **Actions** tab
+2. Select workflow from left sidebar
+3. Click on run to see details
+4. Download artifacts (test results, security reports)
+
+**Local Verification:**
+```bash
+# Run tests locally (matches CI)
+make test
+make test-coverage
+
+# Run security scan locally (matches CI)
+make security-scan
+make security-report
+
+# Build Docker images locally (matches CI)
+docker build -t radio-calico:dev --target development .
+docker build -t radio-calico:prod --target production .
+```
+
+### Workflow Configuration
+
+Workflows are defined in `.github/workflows/`:
+- `ci.yml` - Main CI pipeline (tests, security, linting, Docker)
+- `security-scan.yml` - Weekly security audits
+- `dependabot.yml` - Automated dependency updates
+
+**Documentation:** See [.github/workflows/README.md](.github/workflows/README.md) for detailed workflow documentation.
 
 ## 📁 Project Structure
 
