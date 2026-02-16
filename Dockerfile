@@ -2,7 +2,7 @@
 # Supports both development and production builds
 
 # Base stage - shared dependencies
-FROM node:18-alpine AS base
+FROM node:25-alpine AS base
 
 WORKDIR /app
 
