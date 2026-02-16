@@ -78,6 +78,76 @@ http://localhost:3000
 
 The stream will start automatically and you'll see the current song information with rating controls.
 
+## ⚡ Make Targets (Recommended)
+
+Radio Calico includes a Makefile for convenient command shortcuts. This is the easiest way to manage the project!
+
+> **Windows Users:** Use `make.bat` instead of `make` (e.g., `make.bat dev`, `make.bat test`)
+>
+> **Linux/Mac Users:** Use standard `make` command
+
+### Quick Commands
+
+```bash
+# Development
+make dev              # Start development environment (Docker)
+make dev-local        # Start local dev server (npm)
+make test             # Run all tests
+
+# Production
+make prod             # Start production (PostgreSQL + nginx)
+make prod-status      # Check service health
+make prod-test        # Test production deployment
+
+# Database
+make backup           # Backup production database
+make db-shell         # Open PostgreSQL shell
+
+# Management
+make stop             # Stop all services
+make clean            # Clean up containers
+make status           # Show all service status
+make help             # Show all available targets
+```
+
+### All Available Targets
+
+Run `make help` to see the complete list of targets:
+
+**Development:** `dev`, `dev-local`, `dev-logs`, `dev-test`, `dev-shell`
+**Production:** `prod`, `prod-setup`, `prod-rebuild`, `prod-logs`, `prod-status`, `prod-test`, `prod-shell`
+**Testing:** `test`, `test-watch`, `test-coverage`
+**Database:** `backup`, `restore`, `db-shell`
+**Management:** `install`, `stop`, `clean`, `clean-all`, `status`, `logs`
+
+### Example Workflows
+
+**Starting development:**
+```bash
+make dev              # That's it!
+```
+
+**Running tests:**
+```bash
+make test             # Run once
+make test-watch       # Watch mode
+make test-coverage    # With coverage
+```
+
+**Production deployment:**
+```bash
+make prod-setup       # First time only
+make prod             # Start services
+make prod-status      # Check health
+make prod-test        # Verify deployment
+```
+
+**Database backup:**
+```bash
+make backup           # Creates timestamped backup
+make restore FILE=backup_postgres_20260216_095000.sql
+```
+
 ## 🐳 Docker Deployment
 
 Radio Calico supports Docker for both development and production deployments.
@@ -147,8 +217,11 @@ Access at: `http://localhost:3000`
 radiocalico/
 ├── server.js                # Express server and API routes
 ├── database.js              # SQLite database setup and queries
+├── database-config.js       # Database abstraction layer (SQLite/PostgreSQL)
+├── database-postgres.js     # PostgreSQL implementation
 ├── package.json             # Dependencies and scripts
 ├── database.db              # SQLite database (auto-generated)
+├── Makefile                 # Convenient make targets for dev/prod/test
 ├── .gitignore               # Git ignore rules
 ├── CLAUDE.md                # Project documentation for Claude Code
 ├── README.md                # This file

@@ -13,10 +13,31 @@ Radio Calico is a web-based streaming radio station with HLS lossless audio stre
 
 ## Development Commands
 
-### Starting the Server
+### Quick Start with Make (Recommended)
+```bash
+# Development
+make dev              # Start development environment (Docker)
+make dev-local        # Start local dev server (npm)
+make test             # Run all tests
+
+# Production
+make prod             # Start production (PostgreSQL + nginx)
+make prod-status      # Check service health
+make prod-test        # Test production deployment
+
+# Database
+make backup           # Backup production database
+make db-shell         # Open PostgreSQL shell
+
+# Help
+make help             # Show all available targets
+```
+
+### Starting the Server (npm)
 ```bash
 # Development mode with auto-restart on file changes
 npm run dev
+# Or: make dev-local
 
 # Production mode
 npm start
@@ -28,12 +49,15 @@ The server runs on port 3000 by default. Access at `http://localhost:3000`.
 ```bash
 # Run all tests once
 npm test
+# Or: make test
 
 # Run tests in watch mode (re-runs on file changes)
 npm run test:watch
+# Or: make test-watch
 
 # Run tests with coverage report
 npm run test:coverage
+# Or: make test-coverage
 ```
 
 **Test Suite**: 63 tests covering backend ratings API and frontend utility functions. Tests use in-memory SQLite database for isolation and speed (~2 seconds for full suite).
@@ -43,10 +67,12 @@ npm run test:coverage
 # Development (with hot-reload)
 docker-compose up
 # Or: ./docker-dev.sh start
+# Or: make dev
 
-# Production (optimized)
+# Production (optimized with PostgreSQL + nginx)
 docker-compose -f docker-compose.prod.yml up -d
 # Or: ./docker-prod.sh start
+# Or: make prod
 
 # Run tests in container
 docker-compose exec radio-calico-dev npm test
