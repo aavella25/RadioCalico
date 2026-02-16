@@ -38,3 +38,7 @@ desktop.ini
 # Build output
 dist/
 build/
+
+# Test Coverage
+coverage/
+*.lcov

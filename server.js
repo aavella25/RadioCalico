@@ -203,28 +203,33 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-  console.log(`📊 Database ready`);
-  console.log(`\n📝 API Endpoints:`);
-  console.log(`   GET    /api/users           - Get all users`);
-  console.log(`   GET    /api/users/:id       - Get user by ID`);
-  console.log(`   POST   /api/users           - Create new user`);
-  console.log(`   DELETE /api/users/:id       - Delete user`);
-  console.log(`   GET    /api/ratings/:songId - Get song ratings`);
-  console.log(`   POST   /api/ratings         - Rate a song`);
-  console.log(`   GET    /api/health          - Health check\n`);
-});
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n👋 Shutting down gracefully...');
-  db.close((err) => {
-    if (err) {
-      console.error(err.message);
-    }
-    console.log('Database connection closed.');
-    process.exit(0);
+// Start server (only if not being imported for testing)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`📊 Database ready`);
+    console.log(`\n📝 API Endpoints:`);
+    console.log(`   GET    /api/users           - Get all users`);
+    console.log(`   GET    /api/users/:id       - Get user by ID`);
+    console.log(`   POST   /api/users           - Create new user`);
+    console.log(`   DELETE /api/users/:id       - Delete user`);
+    console.log(`   GET    /api/ratings/:songId - Get song ratings`);
+    console.log(`   POST   /api/ratings         - Rate a song`);
+    console.log(`   GET    /api/health          - Health check\n`);
   });
-});
+
+  // Graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('\n👋 Shutting down gracefully...');
+    db.close((err) => {
+      if (err) {
+        console.error(err.message);
+      }
+      console.log('Database connection closed.');
+      process.exit(0);
+    });
+  });
+}
+
+// Export app for testing
+module.exports = app;

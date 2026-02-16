@@ -1,0 +1,39 @@
+# Docker Compose configuration for Radio Calico - Development
+version: '3.8'
+
+services:
+  radio-calico-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: radio-calico-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot-reloading
+      - .:/app
+      # Use anonymous volume for node_modules to avoid conflicts
+      - /app/node_modules
+      # Persist database across restarts
+      - radio-calico-db-dev:/app/data
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    restart: unless-stopped
+    networks:
+      - radio-calico-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  radio-calico-db-dev:
+    driver: local
+
+networks:
+  radio-calico-network:
+    driver: bridge

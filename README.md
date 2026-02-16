@@ -11,6 +11,8 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - 🕰️ **Song History** - Recently played tracks with timestamps
 - 🎨 **Retro UI** - Amber/brass themed CRT-style interface with scanlines and glow effects
 - 💾 **Persistent Ratings** - SQLite database stores all song ratings and metadata
+- ✅ **Comprehensive Tests** - 63 tests covering backend API and frontend utilities
+- 🐳 **Docker Support** - Containerized deployment for dev and production
 
 ## 🛠️ Tech Stack
 
@@ -18,6 +20,7 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - Node.js with Express.js
 - SQLite3 database
 - RESTful API architecture
+- Jest + Supertest for testing
 
 **Frontend:**
 - Vanilla JavaScript (no framework dependencies)
@@ -29,6 +32,11 @@ A retro-futuristic web-based streaming radio station with HLS lossless audio str
 - HLS (HTTP Live Streaming) format
 - CloudFront CDN delivery
 - Timed metadata for song information
+
+**Deployment:**
+- Docker & Docker Compose
+- Multi-stage builds (dev/prod)
+- Volume persistence
 
 ## 🚀 Quick Start
 
@@ -58,12 +66,80 @@ npm run dev
 npm start
 ```
 
-4. **Open your browser**
+4. **Run tests (optional)**
+```bash
+npm test
+```
+
+5. **Open your browser**
 ```
 http://localhost:3000
 ```
 
 The stream will start automatically and you'll see the current song information with rating controls.
+
+## 🐳 Docker Deployment
+
+Radio Calico supports Docker for both development and production deployments.
+
+### Quick Start with Docker
+
+**Development:**
+```bash
+# Start development container with hot-reload
+docker-compose up
+
+# Or use helper script
+chmod +x docker-dev.sh
+./docker-dev.sh start
+```
+
+**Production:**
+```bash
+# Start production container
+docker-compose -f docker-compose.prod.yml up -d
+
+# Or use helper script
+chmod +x docker-prod.sh
+./docker-prod.sh start
+```
+
+Access at: `http://localhost:3000`
+
+### Docker Features
+
+**Development Container:**
+- ✅ Hot-reload enabled (nodemon)
+- ✅ Source code mounted
+- ✅ Full dev dependencies
+- ✅ Debugging support
+
+**Production Container:**
+- ✅ Optimized build (multi-stage)
+- ✅ Non-root user
+- ✅ Health checks
+- ✅ Resource limits
+- ✅ Security hardening
+
+### Docker Commands
+
+```bash
+# Development
+./docker-dev.sh start       # Start container
+./docker-dev.sh logs        # View logs
+./docker-dev.sh test        # Run tests
+./docker-dev.sh shell       # Open shell
+./docker-dev.sh stop        # Stop container
+
+# Production
+./docker-prod.sh start      # Start container
+./docker-prod.sh logs       # View logs
+./docker-prod.sh backup     # Backup database
+./docker-prod.sh status     # Check health
+./docker-prod.sh stop       # Stop container
+```
+
+**Full documentation:** See [DOCKER.md](DOCKER.md) for comprehensive Docker guide.
 
 ## 📁 Project Structure
 
@@ -78,10 +154,24 @@ radiocalico/
 ├── README.md                # This file
 ├── SETUP_INSTRUCTIONS.md    # Detailed setup guide
 ├── RATING_SYSTEM_GUIDE.md   # Rating system documentation
+├── server.test.js           # Backend integration tests (25 tests)
+├── frontend.test.js         # Frontend unit tests (38 tests)
+├── test-helpers.js          # Test utilities and database setup
+├── TESTING.md               # Testing guide and documentation
+├── TEST_SUMMARY.md          # Test results and coverage report
+├── .testing-quick-ref.md    # Quick reference for testing
+├── Dockerfile               # Multi-stage Docker build
+├── docker-compose.yml       # Development Docker Compose
+├── docker-compose.prod.yml  # Production Docker Compose
+├── .dockerignore            # Docker ignore rules
+├── docker-dev.sh            # Development Docker helper script
+├── docker-prod.sh           # Production Docker helper script
+├── DOCKER.md                # Docker deployment guide
 └── public/                  # Frontend files
     ├── index.html           # Main HTML structure
     ├── radio-calico.css     # Retro-futuristic styling
-    └── radio-calico.js      # Streaming and rating functionality
+    ├── radio-calico.js      # Streaming and rating functionality
+    └── radio-calico-utils.js # Testable utility functions
 ```
 
 ## 🔌 API Endpoints
@@ -173,12 +263,89 @@ CREATE TABLE ratings (
 - One vote per user per song (enforced by UNIQUE constraint)
 - Users can update their vote by rating the same song again
 
+## ✅ Testing
+
+Radio Calico includes a comprehensive test suite with **63 tests** covering both backend and frontend functionality.
+
+### Test Framework
+- **Jest** - Test runner and assertion library
+- **Supertest** - HTTP integration testing
+- **In-memory SQLite** - Fast, isolated test database
+
+### Test Coverage
+
+**Backend Tests (25 tests):**
+- ✅ Rating submission (POST /api/ratings)
+- ✅ Rating retrieval (GET /api/ratings/:songId)
+- ✅ Vote updates (changing from up to down)
+- ✅ Input validation (missing fields, invalid values)
+- ✅ Edge cases (unicode, special characters, concurrent operations)
+- ✅ User context tracking
+
+**Frontend Tests (38 tests):**
+- ✅ Song ID generation (Base64 encoding)
+- ✅ User ID management (localStorage)
+- ✅ Metadata parsing
+- ✅ Rating validation
+- ✅ Integration scenarios
+
+### Running Tests
+
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Results
+```
+Test Suites: 2 passed, 2 total
+Tests:       63 passed, 63 total
+Time:        ~2 seconds
+Coverage:    100% on utilities, 46% on server (critical paths)
+```
+
+### Test Documentation
+- **TESTING.md** - Comprehensive testing guide
+- **TEST_SUMMARY.md** - Detailed coverage report
+- **.testing-quick-ref.md** - Quick reference card
+
+### Writing Tests
+
+**Backend test example:**
+```javascript
+test('should create a new rating', async () => {
+  const response = await request(app)
+    .post('/api/ratings')
+    .send({ songId: 'test', userId: 'user1', rating: 'up' })
+    .expect(200);
+
+  expect(response.body.message).toBe('Rating saved successfully');
+});
+```
+
+**Frontend test example:**
+```javascript
+test('should generate consistent song IDs', () => {
+  const id1 = generateSongId('Artist', 'Song');
+  const id2 = generateSongId('Artist', 'Song');
+  expect(id1).toBe(id2);
+});
+```
+
 ## 🔧 Development
 
 ### File Organization
 - **HTML**: Structure only in `public/index.html`
 - **CSS**: All styling in `public/radio-calico.css`
 - **JavaScript**: All functionality in `public/radio-calico.js`
+- **Utilities**: Testable functions in `public/radio-calico-utils.js`
+- **Tests**: Backend in `server.test.js`, frontend in `frontend.test.js`
 
 ### Key Components
 1. **HLS Player** - Initializes stream, handles playback
@@ -201,6 +368,9 @@ Update `streamUrl` in `public/radio-calico.js`
 **Database changes:**
 Edit schema in `database.js`, then delete `database.db` to rebuild
 
+**Add new tests:**
+Add backend tests to `server.test.js` or frontend tests to `frontend.test.js`
+
 ## 💡 Tips
 
 - **Port conflicts**: Change `PORT` in `server.js` if port 3000 is in use
@@ -208,6 +378,8 @@ Edit schema in `database.js`, then delete `database.db` to rebuild
 - **User ID**: Stored in localStorage as `radioCalicoUserId`
 - **Hard refresh**: Use Ctrl+F5 to clear cached CSS/JS after changes
 - **Stream issues**: Check browser console for HLS.js errors
+- **Test in watch mode**: Run `npm run test:watch` during development
+- **Check coverage**: Run `npm run test:coverage` to see what's tested
 
 ## 🐛 Troubleshooting
 
@@ -224,6 +396,11 @@ Edit schema in `database.js`, then delete `database.db` to rebuild
 **No audio visualizer:**
 - Click play button first (Web Audio requires user interaction)
 - Check if browser supports Web Audio API
+
+**Tests failing:**
+- Run `npm install` to ensure all dependencies are installed
+- Check that Node.js version is 14 or higher
+- See TESTING.md for detailed troubleshooting
 
 ## 📝 License
 

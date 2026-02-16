@@ -24,6 +24,39 @@ npm start
 
 The server runs on port 3000 by default. Access at `http://localhost:3000`.
 
+### Running Tests
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+**Test Suite**: 63 tests covering backend ratings API and frontend utility functions. Tests use in-memory SQLite database for isolation and speed (~2 seconds for full suite).
+
+### Docker Deployment
+```bash
+# Development (with hot-reload)
+docker-compose up
+# Or: ./docker-dev.sh start
+
+# Production (optimized)
+docker-compose -f docker-compose.prod.yml up -d
+# Or: ./docker-prod.sh start
+
+# Run tests in container
+docker-compose exec radio-calico-dev npm test
+
+# View logs
+docker-compose logs -f
+```
+
+**Docker Features**: Multi-stage builds, dev/prod configurations, health checks, volume persistence, non-root user in production. See [DOCKER.md](DOCKER.md) for full guide.
+
 ### Database Management
 - Database file: `database.db` (auto-created on first run)
 - To reset database: delete `database.db` and restart server
@@ -34,16 +67,30 @@ The server runs on port 3000 by default. Access at `http://localhost:3000`.
 ### Root Directory
 ```
 radiocalico/
-├── server.js              # Express server and API routes
+├── server.js              # Express server and API routes (exportable for testing)
 ├── database.js            # SQLite database setup and queries
 ├── package.json           # Node.js dependencies and scripts
 ├── database.db            # SQLite database file (auto-generated)
 ├── CLAUDE.md              # This file - project documentation
 ├── RadioCalico_Style_Guide.txt  # Brand style guide reference
+├── server.test.js         # Backend integration tests (25 tests)
+├── frontend.test.js       # Frontend unit tests (38 tests)
+├── test-helpers.js        # Test utilities (in-memory database setup)
+├── TESTING.md             # Testing guide and documentation
+├── TEST_SUMMARY.md        # Test results and coverage analysis
+├── .testing-quick-ref.md  # Quick reference for testing commands
+├── Dockerfile             # Multi-stage Docker build (dev/prod)
+├── docker-compose.yml     # Docker Compose for development
+├── docker-compose.prod.yml # Docker Compose for production
+├── .dockerignore          # Docker build context exclusions
+├── docker-dev.sh          # Development Docker helper script
+├── docker-prod.sh         # Production Docker helper script
+├── DOCKER.md              # Comprehensive Docker deployment guide
 ├── public/                # Static files served by Express
 │   ├── index.html         # Main HTML structure (149 lines)
 │   ├── radio-calico.css   # All styling (875 lines)
 │   ├── radio-calico.js    # All functionality (503 lines)
+│   ├── radio-calico-utils.js  # Extracted testable functions
 │   ├── app.js             # Legacy demo file (not used)
 │   └── style.css          # Legacy demo file (not used)
 └── RadioCalicoStyle/      # Brand assets (reference only, not used in app)
@@ -53,6 +100,24 @@ radiocalico/
 - **index.html** - Clean HTML structure with semantic markup
 - **radio-calico.css** - Retro-futuristic amber/brass theme with animations
 - **radio-calico.js** - HLS streaming, metadata polling, rating system, user management
+- **radio-calico-utils.js** - Pure utility functions (song ID generation, user ID management, metadata parsing, rating validation)
+
+### Test Files
+- **server.test.js** - Backend integration tests for ratings API (Jest + Supertest)
+- **frontend.test.js** - Frontend unit tests for utility functions (Jest)
+- **test-helpers.js** - Test infrastructure (in-memory database setup/teardown)
+- **TESTING.md** - Comprehensive testing documentation
+- **TEST_SUMMARY.md** - Test results and coverage report
+- **.testing-quick-ref.md** - Quick reference card
+
+### Docker Files
+- **Dockerfile** - Multi-stage build supporting development and production
+- **docker-compose.yml** - Development orchestration (hot-reload, mounted source)
+- **docker-compose.prod.yml** - Production orchestration (optimized, secure)
+- **.dockerignore** - Build context exclusions
+- **docker-dev.sh** - Development helper script (start, stop, logs, test, shell)
+- **docker-prod.sh** - Production helper script (start, stop, backup, restore, stats)
+- **DOCKER.md** - Complete Docker deployment guide
 
 ### Legacy Files (Not Currently Used)
 - **app.js** - Original user management demo
@@ -68,6 +133,7 @@ radiocalico/
 - RESTful API endpoints for users and ratings
 - SPA fallback route (serves index.html for all non-API routes)
 - Graceful shutdown with database cleanup
+- Exports app for testing (starts server only when run directly)
 
 **Database** ([database.js](database.js)):
 - SQLite3 connection and schema initialization
@@ -122,6 +188,14 @@ The frontend follows a clean separation of concerns with three main files:
 - User directory management (legacy feature)
 - Volume control and UI state management
 
+**Utility Functions** ([public/radio-calico-utils.js](public/radio-calico-utils.js)):
+- Pure functions extracted for testability
+- `generateSongId(artist, title)` - Base64 encoding for song IDs
+- `getUserId(storage)` - User ID generation and retrieval
+- `parseMetadata(data)` - Metadata parsing with defaults
+- `isValidRating(rating)` - Rating validation ('up' or 'down')
+- Fully tested with 100% code coverage
+
 **Key Frontend Features**:
 - **Audio Player**: HLS streaming with play/pause, volume control, and visual equalizer
 - **Metadata Display**: Shows current artist and title from HLS stream metadata
@@ -160,6 +234,58 @@ The frontend follows a clean separation of concerns with three main files:
 - UNIQUE constraint on (song_id, user_id)
 - Index on song_id for performance
 
+## Testing Architecture
+
+### Test Framework
+- **Jest** - Test runner and assertion library
+- **Supertest** - HTTP assertion library for API testing
+- **In-memory SQLite** - Isolated test database (`:memory:`)
+
+### Backend Tests ([server.test.js](server.test.js))
+**25 integration tests** covering:
+- Rating creation (POST /api/ratings)
+- Rating retrieval (GET /api/ratings/:songId)
+- Vote updates (changing from up to down and vice versa)
+- Input validation (missing fields, invalid values)
+- Edge cases (unicode, special characters, concurrent operations)
+- User context tracking (query params and headers)
+- Health check endpoint
+
+**Test Strategy**: Pragmatic integration tests focusing on high-value API paths. Each test uses fresh in-memory database for isolation.
+
+### Frontend Tests ([frontend.test.js](frontend.test.js))
+**38 unit tests** covering:
+- Song ID generation (Base64 encoding consistency)
+- User ID management (localStorage persistence)
+- Metadata parsing (defaults and optional fields)
+- Rating validation (accept 'up'/'down', reject invalid)
+- Integration scenarios (song changes, rating workflows)
+
+**Test Strategy**: Unit tests for pure utility functions with mocked dependencies (localStorage, etc.)
+
+### Test Helpers ([test-helpers.js](test-helpers.js))
+- `createTestDatabase()` - Creates in-memory SQLite with full schema
+- `closeDatabase(db)` - Clean database cleanup
+- Fast test execution (~2 seconds for 63 tests)
+
+### Coverage
+```
+File                    | Coverage
+------------------------|----------
+radio-calico-utils.js   | 100%
+server.js (ratings API) | 46% (focused on critical paths)
+```
+
+### Test Isolation
+- Each test suite uses fresh in-memory database
+- Database cleared between individual tests
+- No impact on production `database.db` file
+- Tests run in parallel for speed
+- Mocked localStorage for frontend tests
+
+### Running Tests
+See Development Commands section above for test commands.
+
 ## Styling and Design
 
 The active UI uses a **retro-futuristic amber/brass theme** with:
@@ -175,16 +301,20 @@ The active UI uses a **retro-futuristic amber/brass theme** with:
 - **User IDs** are browser-local only (localStorage), not tied to actual user accounts
 - **Rating updates** are allowed - users can change their vote for the same song
 - **Port conflicts**: If port 3000 is in use, modify `PORT` constant in server.js
-- **No test suite**: The `npm test` script is not implemented
+- **Test suite**: 63 tests covering ratings API and frontend utilities (run with `npm test`)
+- **Docker support**: Multi-stage Dockerfile with dev/prod configurations (run with `docker-compose up`)
 - **No build process**: Frontend is vanilla HTML/CSS/JS, no bundler required
 - **Separation of concerns**: HTML (structure), CSS (styling), and JS (functionality) are in separate files for maintainability
+- **Test-driven development**: Backend tests use in-memory database; frontend tests use extracted pure functions
 
 ## Common Development Tasks
 
 ### Adding New API Endpoints
 1. Add route handler in [server.js](server.js)
 2. If new table needed, update schema in [database.js](database.js)
-3. Test endpoint with curl or browser dev tools
+3. Write integration test in [server.test.js](server.test.js)
+4. Run tests with `npm test` to verify
+5. Test endpoint manually with curl or browser dev tools
 
 ### Modifying the Stream UI
 1. Edit [public/radio-calico.css](public/radio-calico.css) for styling changes
@@ -200,6 +330,38 @@ The active UI uses a **retro-futuristic amber/brass theme** with:
 This project has no formal migration system. To add columns/tables:
 1. Update schema in [database.js](database.js) `initializeDatabase()`
 2. For production: manually alter tables or delete database.db to rebuild (loses data)
+
+### Running and Writing Tests
+1. Run all tests: `npm test`
+2. Run in watch mode: `npm run test:watch` (re-runs on file changes)
+3. Generate coverage: `npm run test:coverage`
+4. Add backend tests to [server.test.js](server.test.js) using Supertest
+5. Add frontend tests to [frontend.test.js](frontend.test.js) for pure functions
+6. Extract testable functions to [public/radio-calico-utils.js](public/radio-calico-utils.js)
+7. See [TESTING.md](TESTING.md) for comprehensive testing guide
+8. See [.testing-quick-ref.md](.testing-quick-ref.md) for quick reference
+
+**Test Philosophy**: Pragmatic testing focused on high-value paths. Backend uses integration tests with in-memory database. Frontend tests pure utility functions. See TEST_SUMMARY.md for detailed coverage report.
+
+### Docker Deployment
+1. **Development**: `docker-compose up` or `./docker-dev.sh start`
+   - Hot-reload enabled with nodemon
+   - Source code mounted for live updates
+   - Full dev dependencies included
+2. **Production**: `docker-compose -f docker-compose.prod.yml up -d` or `./docker-prod.sh start`
+   - Optimized multi-stage build
+   - Runs as non-root user
+   - Health checks enabled
+   - Resource limits applied
+3. **Helper Scripts**:
+   - `./docker-dev.sh` - Development commands (start, stop, logs, test, shell)
+   - `./docker-prod.sh` - Production commands (start, stop, backup, restore, stats)
+4. **Run tests in container**: `docker-compose exec radio-calico-dev npm test`
+5. **Database backup**: `./docker-prod.sh backup` (creates timestamped tar.gz)
+6. **Database restore**: `./docker-prod.sh restore backup_file.tar.gz`
+7. See [DOCKER.md](DOCKER.md) for comprehensive deployment guide
+
+**Docker Philosophy**: Development containers prioritize developer experience (hot-reload, debugging). Production containers prioritize security (non-root), performance (optimized layers), and reliability (health checks, resource limits).
 
 ### Style Guide
 the style guide is called RadioCalico_Style_Guide.txt
