@@ -148,6 +148,7 @@ jobs:
         context: .
         target: development
         push: false
+        load: true
         tags: radio-calico:dev-test
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -158,6 +159,7 @@ jobs:
         context: .
         target: production
         push: false
+        load: true
         tags: radio-calico:prod-test
         cache-from: type=gha
         cache-to: type=gha,mode=max

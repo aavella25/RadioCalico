@@ -18,7 +18,11 @@ const sampleRate = document.getElementById('sampleRate');
 const historyList = document.getElementById('historyList');
 const albumArt = document.getElementById('albumArt');
 
-const streamUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8';
+// Stream URL - replace with your own stream
+// Back to Apple test stream (works reliably, but just test tones)
+const streamUrl = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8';  // Apple test (beeps)
+// const streamUrl = 'https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8';  // NASA TV
+// const streamUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8';  // Your CloudFront (needs setup)
 const metadataUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/metadatav2.json';
 const albumArtUrl = 'https://d3d4yli4hf5bmh.cloudfront.net/cover.jpg';
 
