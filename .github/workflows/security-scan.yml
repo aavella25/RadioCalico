@@ -27,14 +27,13 @@ jobs:
     - name: Run comprehensive security audit
       run: |
         echo "📊 Running comprehensive security audit..."
-        chmod +x security-scan.sh
-        ./security-scan.sh scan || true
-        ./security-scan.sh report || true
+        make security-scan || true
+        make security-report
 
     - name: Check production dependencies
       run: |
         echo "🔒 Checking production dependencies only..."
-        ./security-scan.sh check-production || true
+        make security-prod || true
 
     - name: Generate audit summary
       run: |
